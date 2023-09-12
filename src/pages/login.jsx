@@ -13,10 +13,8 @@ import { Box } from "@mui/material";
 function Login() {
 
 	const value = useContext(UserContext);
-
-	if(value){console.log('Login value and loading '+value.currentUser +value.loading)}
 	
-	let history = useNavigate()
+	let navigate = useNavigate()
 
 	const [redirect, setredirect] = useState(null);
 
@@ -50,7 +48,11 @@ function Login() {
 		getDoc(docRef).then(doc => {
             if (doc.exists()) {
 			//user exists then just update the login time
-			console.log("User exists already")
+			console.log("User exists already and data is ")
+			console.log(doc.data())
+			if(Object.prototype.hasOwnProperty.call(doc.data(),"admin")){
+                console.log(doc.data().admin)
+              }
 			return user
         } else {
 			//user doesn't exist - create a new user in firestore
@@ -59,7 +61,7 @@ function Login() {
 		})
     })
     .then(() => {
-		history.push('/')});
+		navigate('/')});
 	}
 	
     return (

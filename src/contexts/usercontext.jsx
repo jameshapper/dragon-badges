@@ -13,12 +13,10 @@ export default function UserProvider({ children }) {
   const [ loading, setLoading ] = useState(true)
   const [ isAdmin, setIsAdmin ] = useState(false)
   const [ avatar, setAvatar ] = useState("/default-avatar.png")
-  const [ myBadges, setMyBadges ] = useState({})
+  //const [ myBadges, setMyBadges ] = useState({})
   const [ userName, setUserName ] = useState("")
 
   function logout() {
-    setIsAdmin(false)
-
     return auth.signOut()
   }
 
@@ -40,9 +38,9 @@ export default function UserProvider({ children }) {
               if(Object.prototype.hasOwnProperty.call(doc.data(),"avatar")){
                 setAvatar(doc.data().avatar)
               }
-              if(Object.prototype.hasOwnProperty.call(doc.data(),"myBadgesMap")){
+/*               if(Object.prototype.hasOwnProperty.call(doc.data(),"myBadgesMap")){
                 setMyBadges(doc.data().myBadgesMap)
-              }
+              } */
               if(Object.prototype.hasOwnProperty.call(doc.data(),"firstName")){
                 setUserName(doc.data().firstName)
               }
@@ -60,7 +58,7 @@ export default function UserProvider({ children }) {
     userName,
     isAdmin,
     avatar,
-    myBadges,
+    //myBadges,
     loading,
     logout
   }

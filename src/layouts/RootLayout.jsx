@@ -11,7 +11,6 @@ import Button from '@mui/material/Button'
 import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
-import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
@@ -20,6 +19,7 @@ import Avatar from '@mui/material/Avatar';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import ShieldIcon from '@mui/icons-material/Shield';
 import { EmojiPeople } from '@mui/icons-material';
+import { ListItemButton } from '@mui/material';
 
 
 const drawerWidth = 200;
@@ -63,17 +63,15 @@ const drawerWidth = 200;
 function Layout() {
 
     const { currentUser, isAdmin, avatar, logout } = useContext(UserContext);
-    const location = useLocation()
+    const location = useLocation() // currently not used, but might enable highlighting of icon to show current page
     const [ menuItems, setMenuItems ] = useState([])
 
-
-
-    let history = useNavigate();
+    let navigate = useNavigate();
 
     if(currentUser){
         console.log('In Layout user is Admin is '+isAdmin)
     } else {
-        history.push('/login')
+        navigate('/login')
     }
 
     useEffect(() => {
@@ -87,7 +85,7 @@ function Layout() {
 	const logoutHandler = async() => {
         console.log('Logout Clicked');
         await logout().then(() => {
-            history.push('/login')
+            navigate('/login')
           }).catch((error) => {
             console.log(error)
           });
@@ -102,7 +100,7 @@ function Layout() {
                             DragonBadges
                         </Typography>
                         <Box sx={{flexGrow:1}}/>
-                        <Button color='inherit' onClick={() => history.push('/badges')} >Badges</Button>
+                        <Button color='inherit' onClick={() => navigate('/badges')} >Badges</Button>
                     </Toolbar>
                 </AppBar>
                 <Drawer
@@ -125,18 +123,16 @@ function Layout() {
                     <Divider />
                     <List>
                     {menuItems.map((item) => (
-                        <ListItem 
-                        button 
+                        <ListItemButton 
                         key={item.text} 
-                        onClick={() => history.push(item.path)}
+                        onClick={() => navigate(item.path)}
                         className={location.pathname === item.path ? null : null}
                         >
                         <ListItemIcon>{item.icon}</ListItemIcon>
                         <ListItemText primary={item.text} />
-                        </ListItem>
+                        </ListItemButton>
                     ))}
-                        <ListItem
-                        button
+                        <ListItemButton
                         key='logout'
                         onClick={() => logoutHandler()}
                         >
@@ -145,7 +141,7 @@ function Layout() {
                                 <ExitToAppIcon />{' '}
                                 <ListItemText primary='Logout' />
                             </ListItemIcon>
-                        </ListItem>
+                        </ListItemButton>
                     </List>
                 </Drawer>
                 <Box sx={{width:1, m:2}} >

@@ -1,6 +1,4 @@
-import { useState, useContext, useEffect } from 'react';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore'
+import { useState, useContext } from 'react';
 import { Link, useLoaderData } from 'react-router-dom'
 
 import { Typography,
@@ -16,78 +14,25 @@ import { Typography,
          MenuItem, 
          TextField, 
          Tooltip,
-         Box } from '@mui/material';
+         Box 
+        } from '@mui/material';
 
 import Grid from '@mui/material/Unstable_Grid2';
 
 import { UserContext } from '../contexts/usercontext';
 
-// this method of getting data uses react router's loader and useLoaderData hook
-export function loader() {
-    return getBadges()
-}
-const badgesRef = doc(db, "adminDocs", "badgeList")
-
-async function getBadges() {
-    const badges = await getDoc(badgesRef)
-    const badgeData = await badges.data().badges
-    return badgeData
-}
-// end of loader
-
 function Badges() {
 
-    const { loading, isAdmin } = useContext(UserContext)
+    const { isAdmin } = useContext(UserContext)
 
-    //const [ badges, setBadges ] = useState([])
-    const [ classesList, setClassesList ] = useState([])
     const [ selectedCourse, setSelectedCourse ] = useState("All Badges")
     const [ searchParam ] = useState(["badgename"]);
     const [ supportedBadgeIds, setSupportedBadgeIds ] = useState([])
     const [q, setQ] = useState("");
 
-    const [ uiLoading, setUiLoading ] = useState(loading)
+    const [ uiLoading ] = useState(false)
 
-    const badges = useLoaderData()
-
-/*     useEffect(() => {
-        setUiLoading(true)
-        const badgeListRef = doc(db,'adminDocs','badgeList')
-        // ? https://devtrium.com/posts/async-functions-useeffect ? Cleanup?
-        const fetchBadges = async () => {
-            const badges = await getDoc(badgeListRef)
-            const badgeData = await badges.data().badges
-            setBadges(badgeData)
-            setUiLoading(false)
-        }
-
-        fetchBadges() */
-/*         return getDoc(badgeListRef)
-
-        .onSnapshot(snapshot => {
-            setBadges(snapshot.data().badges)
-            setUiLoading(false)
-        }) */
- //   }, []);
-
-    useEffect(() => {
-        setUiLoading(true)
-        const classesListRef = doc(db,'adminDocs','classesList')
-        const fetchClasses = async () => {
-            const classes = await getDoc(classesListRef)
-            const classesData = await classes.data().classes
-            setClassesList(classesData)
-            setUiLoading(false)
-        }
-
-        fetchClasses()
-/*         return getDoc(classesListRef)
-
-        .then(doc => {
-            setClassesList(doc.data().classes)
-            setUiLoading(false)
-        }) */
-    }, []);
+    const { badges, classesList } = useLoaderData()
 
     function search(badges) {
         return badges.filter((badge) => {

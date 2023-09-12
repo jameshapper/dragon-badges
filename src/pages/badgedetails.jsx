@@ -144,7 +144,7 @@ export default function BadgeDetails() {
         console.log('file upload name is '+fileUpload.name)
   
         const fileRef = ref(storage, fileUpload.name)
-        await uploadBytes(fileRef)
+        await uploadBytes(fileRef, fileUpload)
         const downloadUrl = await getDownloadURL(fileRef)
         //console.log('waiting for download url '+await downloadUrl)
         const badgeIdRef = doc(db,"badges",badgeId)

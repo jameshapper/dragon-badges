@@ -13,8 +13,11 @@ import UserProvider from "./contexts/usercontext"
 
   // pages
 import Login from "./pages/login"
-import Badges, { loader as badgesLoader } from "./pages/badges"
+import Badges from "./pages/badges"
+import { badgesLoader, badgeEditLoader, notesLoader } from "./apiloaders"
 import BadgeDetails, { loader as badgeDetailsLoader } from "./pages/badgedetails"
+import BadgeForm from "./pages/badgeform"
+import Note from "./pages/dashboard"
 
 import { ThemeProvider, createTheme } from "@mui/material/styles"
 import { CssBaseline } from "@mui/material"
@@ -36,10 +39,13 @@ const router = createBrowserRouter(
     <Route path="/" >
       <Route path="login" element={<Login />} />
       <Route index element={<div>Hello world!</div>} />
+      <Route path="temp" element={<div>Hello temp!</div>} />
       <Route element={<RootLayout/>}>
         <Route path="badges" element={<Badges />} loader={badgesLoader} />
         <Route path="badges/:badgeId" element={<BadgeDetails />} loader={badgeDetailsLoader}/>    
-        <Route path="contact" element={<div>Hello contact!</div>} />
+        <Route path="badgeForm" element={<BadgeForm />} />
+        <Route path="badgeForm/:badgeId" element={<BadgeForm />} loader={badgeEditLoader}/>
+        <Route path="dashboard/:userId" element={<Note />} loader={notesLoader} />
       </Route>
 
       <Route path="*" element={<Login />} />
