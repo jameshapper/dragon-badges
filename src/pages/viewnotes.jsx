@@ -5,8 +5,13 @@ import { db } from '../firebase';
 import { UserContext } from '../contexts/usercontext';
 import Editor from './editor'
 import dayjs from 'dayjs';
-import PropTypes from 'prop-types';
+// import relativeTime plugin
+import relativeTime from "dayjs/plugin/relativeTime"; 
 
+// extend dayjs with relativeTime plugin
+dayjs.extend(relativeTime); 
+
+import PropTypes from 'prop-types';
 import Grid from '@mui/material/Unstable_Grid2';
 import CloseIcon from '@mui/icons-material/Close'
 import {
@@ -158,7 +163,7 @@ export default function ViewNotes({note, handleViewClose, viewOpen }) {
                 margin: "8px 8px 8px 8px"
             }}>
             <Grid container >
-                <Grid item xs={1}>
+                <Grid xs={1}>
                     <Avatar aria-label="recipe" sx={{
                         height: 55,
                         width: 50,
@@ -167,13 +172,13 @@ export default function ViewNotes({note, handleViewClose, viewOpen }) {
                         marginTop: 2}}
                         src={avatar} />
                 </Grid>
-                <Grid item xs={11}>
+                <Grid xs={11}>
                     <DialogTitle id="customized-dialog-title" onClose={handleViewClose}>
                     {note.title}
                     </DialogTitle>
-                    <div>{dayjs(created).fromNow()+" by "+note.author}</div>
+                    <div>{dayjs(created).fromNow() +" by "+note.author}</div>
                 </Grid>
-                <Grid item>
+                <Grid >
                     <DialogContent>
                         <div dangerouslySetInnerHTML={{__html:note.rt}}/>
                     </DialogContent>
@@ -186,7 +191,7 @@ export default function ViewNotes({note, handleViewClose, viewOpen }) {
           <div>
               {comments.map((comment) => (
                 <Grid container key={comment.id}>
-                    <Grid item xs={1}>
+                    <Grid xs={1}>
                     <Avatar aria-label="recipe" sx={{
                         height: 55,
                         width: 50,
@@ -196,7 +201,7 @@ export default function ViewNotes({note, handleViewClose, viewOpen }) {
                         m:1
                     }} src={comment.avatar} />
                     </Grid>
-                    <Grid item xs={11}>
+                    <Grid xs={11}>
                         <Paper>
                         {dayjs(comment.createdAt).fromNow()+" by "+comment.author}
                             <DialogContent>
@@ -210,11 +215,11 @@ export default function ViewNotes({note, handleViewClose, viewOpen }) {
               ))}
           </div>
         }
-        <Grid item xs={12} sm={6} m={1}>
+        <Grid xs={12} sm={6} m={1}>
             <Editor initText={commentRt} setRt={rt => setCommentRt(rt)} setBody={body => setCommentBody(body)}/>
         </Grid>
 
-        <Grid item xs={12} sm={6} m={1}>
+        <Grid xs={12} sm={6} m={1}>
             <Button variant="contained" onClick={handleSubmitComment}>Add Comment</Button>
         </Grid>
 

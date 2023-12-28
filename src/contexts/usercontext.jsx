@@ -44,6 +44,7 @@ export default function UserProvider({ children }) {
               if(Object.prototype.hasOwnProperty.call(doc.data(),"firstName")){
                 setUserName(doc.data().firstName)
               }
+              //setLoading(false)
             }
           }) 
 

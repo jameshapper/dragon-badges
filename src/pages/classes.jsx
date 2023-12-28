@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { db, auth } from '../firebase';
-import { Link } from "react-router-dom";
-import ListTable from './listtable2'
+import { query, collection, where, getDocs, collectionGroup, orderBy } from 'firebase/firestore'
 
-//import Datepicker from 'react-datepicker'
-import DatePicker from '@mui/lab/DatePicker';
-import 'react-datepicker/dist/react-datepicker.css'
+import { db } from '../firebase';
+import { Link, useLoaderData } from "react-router-dom";
+import ListTable from './listtable'
+
+import { DatePicker } from '@mui/x-date-pickers';
+
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import MultiSelect from "react-multi-select-component";
+import {MultiSelect} from "react-multi-select-component";
 
 import CloseIcon from '@mui/icons-material/Close';
 import Grid from '@mui/material/Unstable_Grid2';
@@ -38,7 +39,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 function TeacherClasses() {
 
-    const [ user ] = useState(auth.currentUser)
+    //const [ user ] = useState(auth.currentUser)
 
     const [ title, setTitle ] = useState('')
 
@@ -51,21 +52,28 @@ function TeacherClasses() {
     const [ classForSelect, setClassForSelect ] = useState([])
 
     const [ open, setOpen ] = useState(false)
-    const [ uiLoading, setUiLoading ] = useState(true)
+    // const [ uiLoading, setUiLoading ] = useState(true)
+    const [ uiLoading ] = useState(false)
 
-    const [ teacherClasses, setTeacherClasses ] = useState([]);
+
+    //const [ teacherClasses, setTeacherClasses ] = useState([]);
     const [ notes, setNotes ] = useState([]);
     const [ status, setStatus ] = useState("Active")
     const [ noteType, setNoteType ] = useState("ActionItem")
     const [ actionType, setActionType ] = useState("ProblemSolving")
-    const [ selectedDate, setSelectedDate ] = useState(new Date(Date.now() - 604800000))
-    const [ laterDate ] = useState(new Date(Date.now() + 691200000))
+/*     const [ selectedDate, setSelectedDate ] = useState(new Date(Date.now() - 604800000))
+    const [ laterDate ] = useState(new Date(Date.now() + 691200000)) */
+    const [ selectedDate, setSelectedDate ] = useState(dayjs())
+    const [ laterDate ] = useState(dayjs())
     //const [ laterDate, setLaterDate ] = useState(new Date(Date.now() + 691200000))
 
     const [ selected, setSelected ] = useState([])
+    const teacherClasses = useLoaderData()
+    console.log(teacherClasses)
+
 
     //get class data (if stored in teacherClasses collection?)
-    useEffect(() => {
+/*     useEffect(() => {
         
         if(user){
             return db.collection("users").doc(user.uid).collection('teacherClasses').get()
@@ -82,7 +90,7 @@ function TeacherClasses() {
             })
         }
 
-    }, [user]);
+    }, [user]); */
 
     useEffect(() => {
         //console.log('selected ids are '+selected.map((student) => student.value))
@@ -135,133 +143,117 @@ function TeacherClasses() {
 
         if(noteType === "Progress") {
             if(students10.length > 0) {
-                await
-                db.collection('users').where('uid','in',students10).get()
-                .then(docs => {
-                    docs.forEach(doc => {
-                        if("nextTarget" in doc.data()){
-                            targetAssessment = doc.data().nextTarget.find(thisClass => {                        
-                                return thisClass.classId === classId
-                            })
-                        }
-                        if("termGoals" in doc.data()){
-                            termGoal = doc.data().termGoals.find(thisClass => {
-                                return thisClass.classId === classId
-                            })
-                        }
-                        let nextCrits = 0
-                        if(targetAssessment && "crits" in targetAssessment){
-                            nextCrits = targetAssessment.crits
-                        }
-                        classObject = {...targetAssessment, ...termGoal, nextCrits: nextCrits, uid: doc.data().uid, firstName: doc.data().firstName, avatar: doc.data().avatar}
-                        sumEvidence = evidenceSum(doc.data().evidence, classObject.startDate)
-                        classObject = {...classObject, sumEvidence: sumEvidence}
-                        notes10.push(classObject)
-                        console.log(classObject)
-                    })
-                })       
-                students10.forEach(studentId => {
-                    db.collectionGroup('notes')
-                    .where('uid','==',studentId)
-                    .where('noteType','==','Assessment')
-                    .where('ts_msec','>=',1647320001000)
-                    .orderBy('ts_msec','asc')
-                    .limit(1)
-                    .get()
-                    .then(docs => {
-                        docs.forEach(doc => {
-                            console.log("latest assessment for "+studentId)
-                            console.log(doc.data())
+                const q = query(collection(db, "users"), where('uid','in',students10));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                // doc.data() is never undefined for query doc snapshots
+                    if("nextTarget" in doc.data()){
+                        targetAssessment = doc.data().nextTarget.find(thisClass => {                        
+                            return thisClass.classId === classId
                         })
-                    })
-                })
+                    }
+                    if("termGoals" in doc.data()){
+                        termGoal = doc.data().termGoals.find(thisClass => {
+                            return thisClass.classId === classId
+                        })
+                    }
+                    let nextCrits = 0
+                    if(targetAssessment && "crits" in targetAssessment){
+                        nextCrits = targetAssessment.crits
+                    }
+                    classObject = {...targetAssessment, ...termGoal, nextCrits: nextCrits, uid: doc.data().uid, firstName: doc.data().firstName, avatar: doc.data().avatar}
+                    sumEvidence = evidenceSum(doc.data().evidence, classObject.startDate)
+                    classObject = {...classObject, sumEvidence: sumEvidence}
+                    notes10.push(classObject)
+                    console.log(classObject)
+                });
+  
+/*                 students10.forEach(studentId => {
+                    const someNotes = query(collectionGroup(db, 'notes'), where('uid','==',studentId), where('noteType','==','Assessment'), where('ts_msec','>=',1647320001000), orderBy('ts_msec','asc'), limit(1));
+                    const querySnapshot = await getDocs(someNotes);
+                    querySnapshot.forEach((doc) => {
+                        //console.log(doc.id, ' => ', doc.data());
+                        console.log("latest assessment for "+studentId)
+                        console.log(doc.data())
+                    });
+                }) */
             }
             if(students20.length > 0) {
-                await
-                db.collection('users').where('uid','in',students20).get()
-                .then(docs => {
-                    docs.forEach(doc => {
-                        if("nextTarget" in doc.data()){
-                            targetAssessment = doc.data().nextTarget.find(thisClass => {                        
-                                return thisClass.classId === classId
-                            })
-                        }
-                        if("termGoals" in doc.data()){
-                            termGoal = doc.data().termGoals.find(thisClass => {
-                                return thisClass.classId === classId
-                            })
-                        }
-                        classObject = {...targetAssessment, ...termGoal, uid: doc.data().uid, firstName: doc.data().firstName, avatar: doc.data().avatar}
-                        sumEvidence = evidenceSum(doc.data().evidence, classObject.startDate)
-                        classObject = {...classObject, sumEvidence: sumEvidence}
-                        notes20.push(classObject)
-                    })
+                const q = query(collection(db, "users"), where('uid','in',students20));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    if("nextTarget" in doc.data()){
+                        targetAssessment = doc.data().nextTarget.find(thisClass => {                        
+                            return thisClass.classId === classId
+                        })
+                    }
+                    if("termGoals" in doc.data()){
+                        termGoal = doc.data().termGoals.find(thisClass => {
+                            return thisClass.classId === classId
+                        })
+                    }
+                    classObject = {...targetAssessment, ...termGoal, uid: doc.data().uid, firstName: doc.data().firstName, avatar: doc.data().avatar}
+                    sumEvidence = evidenceSum(doc.data().evidence, classObject.startDate)
+                    classObject = {...classObject, sumEvidence: sumEvidence}
+                    notes20.push(classObject)
                 })       
             }
 
             if(students30.length > 0) {
-                await
-                db.collection('users').where('uid','in',students30).get()
-                .then(docs => {
-                    docs.forEach(doc => {
-                        if("nextTarget" in doc.data()){
-                            targetAssessment = doc.data().nextTarget.find(thisClass => {                        
-                                return thisClass.classId === classId
-                            })
-                        }
-                        if("termGoals" in doc.data()){
-                            termGoal = doc.data().termGoals.find(thisClass => {
-                                return thisClass.classId === classId
-                            })
-                        }
-                        classObject = {...targetAssessment, ...termGoal, uid: doc.data().uid, firstName: doc.data().firstName, avatar: doc.data().avatar}
-                        sumEvidence = evidenceSum(doc.data().evidence, classObject.startDate)
-                        classObject = {...classObject, sumEvidence: sumEvidence}
-                        notes30.push(classObject)
-                    })
-                })       
+                const q = query(collection(db, "users"), where('uid','in',students30));
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    if("nextTarget" in doc.data()){
+                        targetAssessment = doc.data().nextTarget.find(thisClass => {                        
+                            return thisClass.classId === classId
+                        })
+                    }
+                    if("termGoals" in doc.data()){
+                        termGoal = doc.data().termGoals.find(thisClass => {
+                            return thisClass.classId === classId
+                        })
+                    }
+                    classObject = {...targetAssessment, ...termGoal, uid: doc.data().uid, firstName: doc.data().firstName, avatar: doc.data().avatar}
+                    sumEvidence = evidenceSum(doc.data().evidence, classObject.startDate)
+                    classObject = {...classObject, sumEvidence: sumEvidence}
+                    notes30.push(classObject)
+                })
             }
 
         } else {
 
              if(students10.length>0){
-                let first10 = await
-                db.collectionGroup('notes')
-                .where('uid','in', students10)
-                .where('noteType','==',noteType)
-                .where("timestamp", ">=", recentDate)
-                .where("timestamp", "<", laterDate)
-                .orderBy("timestamp","desc")
-                .get()
-
+                const first10query = query(collectionGroup(db,'notes')
+                ,where('uid','in', students10)
+                ,where('noteType','==',noteType)
+                ,where("timestamp", ">=", recentDate)
+                ,where("timestamp", "<", laterDate)
+                ,orderBy("timestamp","desc"))
+                let first10 = await getDocs(first10query)
                 first10.forEach((doc) => {
                     notes10.push({ ...doc.data(), id: doc.id })
                 })
             }
 
             if(students20.length>0){
-                let second10 = await
-                db.collectionGroup('notes')
-                .where('uid','in', students20)
-                .where('noteType','==',noteType)
-                .where("timestamp", ">=", recentDate)
-                .orderBy("timestamp","desc")
-                .get()
-
+                const second10query = query(collectionGroup(db,'notes')
+                ,where('uid','in', students20)
+                ,where('noteType','==',noteType)
+                ,where("timestamp", ">=", recentDate)
+                ,orderBy("timestamp","desc"))
+                let second10 = await getDocs(second10query)
                 second10.forEach((doc) => {
                 notes20.push({ ...doc.data(), id: doc.id })
                 })
             }
 
             if(students30.length>0){
-                let third10 = await
-                db.collectionGroup('notes')
-                .where('uid','in', students30)
-                .where('noteType','==',noteType)
-                .where("timestamp", ">=", recentDate)
-                .orderBy("timestamp","desc")
-                .get()
-
+                const third10query = query(collectionGroup(db,'notes')
+                ,where('uid','in', students30)
+                ,where('noteType','==',noteType)
+                ,where("timestamp", ">=", recentDate)
+                ,orderBy("timestamp","desc"))
+                let third10 = await getDocs(third10query)
                 third10.forEach((doc) => {
                 notes30.push({ ...doc.data(), id: doc.id })
                 })
@@ -312,10 +304,11 @@ function TeacherClasses() {
                                 <CloseIcon />
                             </IconButton>
                             <Typography variant="h6" sx={{ml:2, flex:1}} >
-                                <Link   to={{
-                                        pathname: "/addClass",
-                                        state: { classId: classId}
-                                    }}>{title}
+                                <Link
+                                    to={{ pathname: "/addClass" }}
+                                    state= {{ classId: classId}} //allows addclass to recognize preexisting class through useLocation
+                                >
+                                    {title}
                                 </Link>
                             </Typography>
 
@@ -344,17 +337,20 @@ function TeacherClasses() {
                         marginTop: 3
                     }} noValidate>
                         <Grid container spacing={2}>
-                            <Grid item xs={6} sm={6} key='date' sx={{mt:1}}>
+                            <Grid xs={6} sm={6} key='date' sx={{mt:1}}>
                                 <DatePicker
                                     label="Earliest Date"
                                     value={selectedDate}
                                     onChange={(newValue) => {
                                     setSelectedDate(newValue);
                                     }}
-                                    renderInput={(params) => <TextField {...params} />}
+                                    //renderInput={(params) => <TextField {...params} />}
+                                    slots={{
+                                        textField: params => <TextField {...params} />
+                                      }}
                                 />
                             </Grid>
-                            <Grid item xs={6} sm={6} key='student-select'>
+                            <Grid xs={6} sm={6} key='student-select'>
                                 <Box sx={{m:0, maxWidth:300, flexDirection:'column'}}>
                                     <Typography>Students</Typography>
                                     <MultiSelect
@@ -365,7 +361,7 @@ function TeacherClasses() {
                                     />
                                 </Box>
                             </Grid>
-                            <Grid item xs={12} sm={12}>
+                            <Grid xs={12} sm={12}>
                                 <InputLabel id="note-status">Status</InputLabel>
                                 <Select
                                     labelId="note-status"
@@ -379,7 +375,7 @@ function TeacherClasses() {
                                     <MenuItem value={"Paused"}>Paused</MenuItem>
                                 </Select>
                             </Grid>
-                            <Grid item xs={12} sm={12}>
+                            <Grid xs={12} sm={12}>
                                 <InputLabel id="noteType label">Note Type</InputLabel>
                                 <Select
                                     labelId="noteType label"
@@ -394,7 +390,7 @@ function TeacherClasses() {
                                     <MenuItem value={"Progress"}>Progress</MenuItem>
                                 </Select>
                             </Grid>
-                            <Grid item xs={12} sm={12} key="actionType">
+                            <Grid xs={12} sm={12} key="actionType">
                                 <InputLabel id="action-type-label">Action Type</InputLabel>
                                 <Select
                                     labelId="action-type-label"
@@ -417,7 +413,7 @@ function TeacherClasses() {
 
                 <Grid container spacing={4} justify='center'>
                     {teacherClasses.map((teacherClass) => (
-                        <Grid item xs={4} sm={2} key = {teacherClass.name}>
+                        <Grid xs={4} sm={2} key = {teacherClass.name}>
                             <Card sx={{minWidth:160}} variant="outlined">
                                 <CardActionArea onClick={() => handleSelectOpen( teacherClass )}>
                                 <CardContent>
@@ -429,7 +425,7 @@ function TeacherClasses() {
                             </Card>
                         </Grid>
                     ))}
-                    <Grid item xs={3} sm={2} key='newclass'>
+                    <Grid xs={3} sm={2} key='newclass'>
                         <Button variant="outlined" component={Link} to='/addclass'>Add class</Button> 
                     </Grid>
                 </Grid>

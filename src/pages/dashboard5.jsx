@@ -29,15 +29,16 @@ import Grid from '@mui/material/Unstable_Grid2';
 import { useLoaderData } from 'react-router-dom';
 
 function Note() {
+    console.log('made it to Note')
 
     const [ noteForEdit, setNoteForEdit ] = useState({})
 
     const [ open, setOpen ] = useState(false)
     const [ buttonType, setButtonType ] = useState('New')
 
-    const [ studentClass, setStudentClass ] = useState("")
+    const [ studentClass, setStudentClass ] = useState({label: "notRealClassKey", value: "see teacher to enroll in a class"})
 
-    const { actionItems, assessmentItems, termGoals, currentPlans, summaryEvidence, classes, badges } = useLoaderData()
+    const { termGoals, currentPlans, summaryEvidence, classes, badges } = useLoaderData()
     const uiLoading = false
 
 	const handleEditOpen = (note) => {
@@ -85,10 +86,10 @@ function Note() {
                         marginTop: 3
                     }} noValidate>
                     <Grid container spacing={2}>
-                        <Grid item xs={5}>
+                        <Grid xs={5}>
                             <Typography variant='h5' sx={{mb:0}}>Student Dashboard</Typography>
                         </Grid>
-                        <Grid item xs={6} key="classesMenu" >
+                        <Grid xs={6} key="classesMenu" >
                         <FormControl sx={{ m: 1, minWidth: 100 }}>
                             <InputLabel id="ClassesMenu">Class</InputLabel>
                             <Select
@@ -97,7 +98,7 @@ function Note() {
                                 value={studentClass}
                                 label="Class"
                                 onChange={onChange}
-                                defaultValue=""
+                                defaultValue={studentClass}
                             >
                             {classes.length && classes.map(aClass => (
                                 <MenuItem key={aClass.value} value={aClass}>
@@ -109,7 +110,7 @@ function Note() {
 
                         </Grid>
                         
-                        <Grid item xs={1} key="addNoteIcon">
+                        <Grid xs={1} key="addNoteIcon">
                             <IconButton
                                 sx={{
                                 }}
@@ -140,7 +141,11 @@ function Note() {
                     <Divider sx={{mt:1}}/>
                 </Box>
 
+                {
+                //open && classes && <NewNote open={open} handleClose={handleClose} buttonType={buttonType} noteForEdit={noteForEdit} classes={classes} badges={badges} studentClass={studentClass} />
+                }
                 {open && classes && <NewNote open={open} handleClose={handleClose} buttonType={buttonType} noteForEdit={noteForEdit} classes={classes} badges={badges} studentClass={studentClass} />}
+
                 
                 <Divider sx={{mt:1}}/>
 

@@ -1,5 +1,6 @@
 import { useState, useContext, useEffect } from 'react';
 import { db } from '../firebase';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore'
 import NewNote from './newnote';
 import ViewNotes from './viewnotes';
 
@@ -33,7 +34,7 @@ import {
 ListNotes.propTypes = {
     classes: PropTypes.array,
     badges: PropTypes.array,
-    studentClass: PropTypes.string,
+    studentClass: PropTypes.object,
     studentId: PropTypes.string
 }
 
@@ -59,15 +60,15 @@ function ListNotes({classes, badges, studentClass, studentId} ) {
 
     useEffect(() => {   
       if(notesAuthorUid){
-        var unsubscribe = db.collection("users").doc(notesAuthorUid).collection("userLists").doc("notesList")
-        .onSnapshot((doc) => {
-          if(doc.exists){
+        var unsubscribe = onSnapshot(doc(db,"users",notesAuthorUid,"userLists","notesList")
+        ,(notesListDoc) => {
+          if(notesListDoc.exists){
             const msecList = []
-            doc.data().notes.forEach(note => {
+            notesListDoc.data().notes.forEach(note => {
               msecList.push(note.ts_msec)
             })
             setMsec(msecList)
-            setRows(doc.data().notes)
+            setRows(notesListDoc.data().notes)
             setMsecCheck(true)
           }
 
@@ -254,7 +255,7 @@ EnhancedTable.propTypes = {
     headCells: PropTypes.array,
     userId: PropTypes.string,
     classes: PropTypes.array,
-    studentClass: PropTypes.string,
+    studentClass: PropTypes.object,
     badges: PropTypes.array,
     nextDate: PropTypes.any,
     prevDate: PropTypes.any
@@ -281,9 +282,9 @@ export function EnhancedTable(props) {
 
   const handleViewOpen = (note) => {
     console.log("Clicked a row!")
-    db.collection("users").doc(userId).collection("notes").doc(note.noteId).get()
-    .then(doc => {
-      setNote(doc.data())
+    getDoc(doc(db,"users",userId,"notes",note.noteId))
+    .then(noteDoc => {
+      setNote(noteDoc.data())
       setViewOpen(true)
     })
   };
@@ -309,9 +310,9 @@ export function EnhancedTable(props) {
   };
 
   const handleEditOpen = (note) => {
-    db.collection("users").doc(userId).collection("notes").doc(note.noteId).get()
-    .then(doc => {
-      setNote({...doc.data(),id:note.noteId})
+    getDoc(doc(db,"users",userId,"notes",note.noteId))
+    .then(noteDoc => {
+      setNote({...noteDoc.data(),id:note.noteId})
       setOpen(true)
     })
   }
@@ -389,8 +390,9 @@ export function EnhancedTable(props) {
         control={<Switch checked={dense} onChange={handleChangeDense} />}
         label="Dense padding"
       />
-
-      <ViewNotes note={note} handleViewClose={handleViewClose} viewOpen={viewOpen}/>
+      {viewOpen &&
+          <ViewNotes note={note} handleViewClose={handleViewClose} viewOpen={viewOpen}/>
+      }
 
       {open && 
           <NewNote open={open} handleClose={handleClose} buttonType={"Edit"} noteForEdit={note} classes={classes} badges={badges} studentClass={studentClass} />
@@ -405,8 +407,8 @@ export function EnhancedTable(props) {
 ActionItemRow.propTypes = {
     row: PropTypes.any,
     labelId: PropTypes.string,
-    handleViewOpen: PropTypes.bool,
-    handleEditOpen: PropTypes.bool,
+    handleViewOpen: PropTypes.func,
+    handleEditOpen: PropTypes.func,
     nextDate: PropTypes.any,
     prevDate: PropTypes.any
 }

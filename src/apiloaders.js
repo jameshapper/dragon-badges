@@ -1,7 +1,6 @@
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from './firebase';
-import { collectionGroup, where, getDocs, query } from 'firebase/firestore'
-
+import { collectionGroup, where, getDocs, query, collection } from 'firebase/firestore'
 
 // badgesLoader for Badges component at badges route
 export function badgesLoader() {
@@ -28,6 +27,24 @@ async function getClasses() {
     const classesList = await classes.data().classes
     return classesList
 }
+
+async function getTeacherClasses(userId) {
+    const querySnapshot = await getDocs(collection(db, "users", userId, "teacherClasses"));
+    const teacherData = []
+    querySnapshot.forEach((doc) => {
+        teacherData.push({...doc.data(), id: doc.id})
+        console.log(doc.id, " => ", doc.data());
+    })
+  // doc.data() is never undefined for query doc snapshots
+    return(teacherData)
+}
+
+export function classesLoader(userContext) {
+    return () => {
+        const { currentUser } = userContext
+        return getTeacherClasses(currentUser.uid)
+    }
+}
 // end of badgesLoader
 
 // badgeEditLoader for editing badge at badgeForm/:badgeId route
@@ -49,8 +66,15 @@ async function getBadge(badgeId) {
 
 const recentDate = new Date('2023-04-29')
 
-export function notesLoader({ params }) {
-    return getAllNotes(params.userId)
+export function notesLoader(userContext) {
+    const { currentUser } = userContext
+    if (currentUser) {
+        return () => {
+            return getAllNotes(currentUser.uid)
+        }
+    } else {
+        return null
+    }
 }
 
 async function getAllNotes(userId) {
@@ -71,11 +95,18 @@ async function getActionItems(userId) {
     where("noteType","==","ActionItem")
     );
     const querySnapshot = await getDocs(notes)
+    console.log('querySnapshot',querySnapshot)
     const actionItems = []
-    querySnapshot.forEach((doc) => {
-        doc => actionItems.push({ ...doc.data(), id: doc.id })
-        console.log(doc.id, ' => ', doc.data())
-    });
+    if (querySnapshot.empty){
+        console.log('no action items in snapshot')
+    } 
+    else {
+        querySnapshot.forEach((actionItemsdoc) => {
+            actionItemsdoc => actionItems.push({ ...actionItemsdoc.data(), id: actionItemsdoc.id })
+            console.log(actionItemsdoc.id, ' => ', actionItemsdoc.data())
+        });
+    }
+
     return actionItems
 }
 
@@ -89,10 +120,16 @@ async function getAssessments(userId) {
     );
     const querySnapshot = await getDocs(notes)
     const assessmentItems = []
-    querySnapshot.forEach((doc) => {
-        doc => assessmentItems.push({ ...doc.data(), id: doc.id })
-        console.log(doc.id, ' => ', doc.data())
-    });
+    if (querySnapshot.empty){
+        console.log('no assessment items in snapshot')
+    } 
+    else {
+        querySnapshot.forEach((assessmentsDoc) => {
+            assessmentsDoc => assessmentItems.push({ ...assessmentsDoc.data(), id: assessmentsDoc.id })
+            console.log(assessmentsDoc.id, ' => ', assessmentsDoc.data())
+        });
+    }
+
     return assessmentItems
 }
 
@@ -106,10 +143,16 @@ async function getTermGoals(userId) {
     );
     const querySnapshot = await getDocs(notes)
     const termGoals = []
-    querySnapshot.forEach((doc) => {
-        doc => termGoals.push({ ...doc.data(), id: doc.id })
-        console.log(doc.id, ' => ', doc.data())
-    });
+    if (querySnapshot.empty){
+        console.log('no term goals in snapshot')
+    } 
+    else {
+        querySnapshot.forEach((termGoalsDoc) => {
+            termGoalsDoc => termGoals.push({ ...termGoalsDoc.data(), id: termGoalsDoc.id })
+            console.log(termGoalsDoc.id, ' => ', termGoalsDoc.data())
+        });
+    }
+
     return termGoals
 }
 
@@ -123,10 +166,15 @@ async function getPlans(userId) {
     );
     const querySnapshot = await getDocs(notes)
     const plans = []
-    querySnapshot.forEach((doc) => {
-        doc => plans.push({ ...doc.data(), id: doc.id })
-        console.log(doc.id, ' => ', doc.data())
-    });
+    if (querySnapshot.empty){
+        console.log('no plans in snapshot')
+    } 
+    else {
+        querySnapshot.forEach((plansDoc) => {
+            plansDoc => plans.push({ ...plansDoc.data(), id: plansDoc.id })
+            console.log(plansDoc.id, ' => ', plansDoc.data())
+        });
+    }
     return plans
 }
 
@@ -134,20 +182,23 @@ async function getStudentData(userId) {
     const userDocRef = doc(db,'users',userId)
     const userDoc = await getDoc(userDocRef)
     if(userDoc) {
+        console.log('userDoc exists')
         const userData = userDoc.data()
+        console.log('userData is ',userData)
         const hasClasses = "classes" in userData
-        const summaryEvidence = userData.evidence
+        //const summaryEvidence = userData.evidence
+        const summaryEvidence = []
         const classes = hasClasses ? userData.classes : []
-        const badgeNames = []
+        const badges = []
         const badgeMap = userData.myBadgesMap
         if(badgeMap){
             const entries = Object.entries(badgeMap)
             console.log('entries are '+JSON.stringify(entries))
             entries.map(entry => {
-                return badgeNames.push(entry[1].badgename)
+                return badges.push(entry[1].badgename)
             })
         }
-        return {summaryEvidence, classes, badgeNames}
+        return {summaryEvidence, classes, badges}
     }
 }
 

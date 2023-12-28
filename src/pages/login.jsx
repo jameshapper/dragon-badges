@@ -13,6 +13,7 @@ import { Box } from "@mui/material";
 function Login() {
 
 	const value = useContext(UserContext);
+	//console.log('value', value)
 	
 	let navigate = useNavigate()
 

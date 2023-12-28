@@ -14,10 +14,11 @@ import UserProvider from "./contexts/usercontext"
   // pages
 import Login from "./pages/login"
 import Badges from "./pages/badges"
-import { badgesLoader, badgeEditLoader, notesLoader } from "./apiloaders"
+import { badgesLoader, badgeEditLoader, notesLoader, classesLoader } from "./apiloaders"
 import BadgeDetails, { loader as badgeDetailsLoader } from "./pages/badgedetails"
 import BadgeForm from "./pages/badgeform"
 import Note from "./pages/dashboard"
+import TeacherClasses from "./pages/classes"
 
 import { ThemeProvider, createTheme } from "@mui/material/styles"
 import { CssBaseline } from "@mui/material"
@@ -46,6 +47,8 @@ const router = createBrowserRouter(
         <Route path="badgeForm" element={<BadgeForm />} />
         <Route path="badgeForm/:badgeId" element={<BadgeForm />} loader={badgeEditLoader}/>
         <Route path="dashboard/:userId" element={<Note />} loader={notesLoader} />
+        <Route path="classes" element={<TeacherClasses />} loader={classesLoader}/>
+
       </Route>
 
       <Route path="*" element={<Login />} />

@@ -29,7 +29,7 @@ ListGoals.propTypes = {
     canEdit: PropTypes.bool,
     classes: PropTypes.array,
     badges: PropTypes.array,
-    studentClass: PropTypes.string
+    studentClass: PropTypes.object
 }
 
 export default function ListGoals({notes, canEdit, classes, badges, studentClass}) {
@@ -63,7 +63,7 @@ export default function ListGoals({notes, canEdit, classes, badges, studentClass
         <div>
             <Grid container spacing={{ xs: 2, md: 2, lg:2 }}>
                 {notes.map((note) => (
-                    <Grid item xs={12} md={6} lg={6} key = {note.id}>
+                    <Grid xs={12} md={6} lg={6} key = {note.id}>
                         <Box
                             sx={{
                                 display: 'flex',

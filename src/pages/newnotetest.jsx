@@ -1,11 +1,14 @@
-import React, { useContext, useEffect } from 'react';
-import { Timestamp, arrayRemove, arrayUnion, doc, updateDoc, addDoc, collection } from 'firebase/firestore';
-import { db } from '../firebase';
+//import React, { useContext } from 'react';
+import React from 'react';
+
+
+//import { Timestamp, arrayRemove, arrayUnion } from 'firebase/firestore';
+//import { db } from '../firebase';
 import "react-quill/dist/quill.snow.css";
 import { useForm, Controller } from 'react-hook-form'
 import PropTypes from 'prop-types';
 
-import { UserContext } from '../contexts/usercontext';
+//import { UserContext } from '../contexts/usercontext';
 
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -37,9 +40,9 @@ import {
     Checkbox, 
     ListItemText } from '@mui/material';
 
-const Transition = React.forwardRef(function Transition(props, ref) {
+/* const Transition = React.forwardRef(function Transition(props, ref) {
 	return <Slide direction="up" ref={ref} {...props} />;
-});
+}); */
 
 // NewNote propTypes and component
 
@@ -50,11 +53,12 @@ NewNote.propTypes = {
     handleClose: PropTypes.func,
     classes: PropTypes.array,
     badges: PropTypes.array,
-    studentClass: PropTypes.object
+    studentClass: PropTypes.string
 }
 
 function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, studentClass }) {
 
+    console.log('buttonType',buttonType)
     const note = noteForEdit
     let initNoteType
     if(buttonType === 'Edit'){
@@ -63,30 +67,46 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
         initNoteType = "ActionItem"
     }
 
-    const findClassId = (classLabel) => {
-        classes.filter(obj => {
-            return obj.label == classLabel
-        })
-    }
-
     console.log('in newnote4 classes and badges are '+JSON.stringify(classes)+" "+JSON.stringify(badges))
     console.log(studentClass)
 
-    const { currentUser, avatar } = useContext(UserContext)
+    //const { currentUser, avatar } = useContext(UserContext)
 
-    const { handleSubmit, control, setValue, watch } = useForm({
-        defaultValues: {
-            studentClass: {label: "some label", value: "some value"}
-          }
-    });
+    const { handleSubmit, control, setValue, watch } = useForm();
 
-    const noteType = watch("noteType",initNoteType)
+    //const noteType = watch("noteType",initNoteType)
 
     let previousTermGoals
     let previousAssessment
     let previousActionItem
 
     if(buttonType === "Edit"){
+        console.log(note)
+        console.log(new Date().getTime())
+        const fields = ['title','status','plannedHrs','completedHrs','actionType','noteType','rt','targetDate','badges','evidence','studentClass','crits']
+        fields.forEach(field => {
+            if(Object.prototype.hasOwnProperty.call(note,field)){
+                if(field === 'targetDate'){
+                    setValue(field, new Date(1000*note[field].seconds))
+                    console.log('targetDate seconds is '+JSON.parse(JSON.stringify(note[field])).seconds)
+                } else if(field === 'studentClass'){
+                    setValue(field, studentClass)
+                    console.log('student class '+JSON.stringify(studentClass))
+                } else if(field === 'rt'){
+                    if(note[field] === ""){
+                        setValue(field,note['body'])
+                        console.log('no rt')
+                    } else {
+                        setValue(field,note['rt'])
+                    }
+                } else {
+                    setValue(field, note[field]);
+                }
+                console.log("value of a field is "+JSON.stringify(note[field]))
+            } else {
+                console.log("this note is missing the key: "+field)
+            }
+        })
         if(note.noteType === "TermGoals"){
             previousTermGoals = {
                 classId: note.studentClass.value,
@@ -95,6 +115,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                 startDate: note.ts_msec,
                 crits: note.crits
             }
+            console.log(previousTermGoals)
         } else if(note.noteType === "Assessment"){
             previousAssessment = {
                 classId: note.studentClass.value,
@@ -103,6 +124,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                 plannedDate: note.ts_msec,
                 crits: note.crits
             }
+            console.log(previousAssessment)
         } else if(note.noteType === "ActionItem"){
             previousActionItem = {
                 classId: note.studentClass.value,
@@ -111,44 +133,13 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                 ts_msec: note.ts_msec,
                 title: note.title,
                 body: note.body
-            } 
-        } 
+            }  
+            console.log(previousActionItem)
+        }
+
+    } else {
+        //setValue("studentClass",studentClass)
     }
-
-
-    useEffect(()=>{
-        if(buttonType === "Edit"){
-            console.log(note)
-            console.log(new Date().getTime())
-            const fields = ['title','status','plannedHrs','completedHrs','actionType','noteType','rt','targetDate','badges','evidence','studentClass','crits']
-            fields.forEach(field => {
-                if(Object.prototype.hasOwnProperty.call(note,field)){
-                    if(field === 'targetDate'){
-                        setValue(field, new Date(1000*note[field].seconds))
-                        console.log('targetDate seconds is '+JSON.parse(JSON.stringify(note[field])).seconds)
-                    } else if(field === 'studentClass'){
-                        setValue(field, studentClass)
-                        console.log('student class '+JSON.stringify(studentClass))
-                    } else if(field === 'rt'){
-                        if(note[field] === ""){
-                            setValue(field,note['body'])
-                            console.log('no rt')
-                        } else {
-                            setValue(field,note['rt'])
-                        }
-                    } else {
-                        setValue(field, note[field]);
-                    }
-                    console.log("value of a field is "+JSON.stringify(note[field]))
-                } else {
-                    console.log("this note is missing the key: "+field)
-                }
-            })
-
-        } else {
-            setValue("studentClass",studentClass)
-        }   
-    },[buttonType, note, setValue, studentClass])
 
     const ITEM_HEIGHT = 48;
     const ITEM_PADDING_TOP = 8;
@@ -207,177 +198,15 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
     dayjs.extend(relativeTime);
 
     function onSubmit(data) {
-        console.log(data)
-        if(data.studentClass === ""){
-            alert('Please select a class before submitting!')
-            return
-        } else {
-            return buttonType !== 'Edit'
-            ? newNote(data)
-            : updateNote(note.id, data);
-        }
+        console.log('onSubmit',data)
 
-    }
-
-    const updateNote = (noteId, data) => {
-        handleClose()
-
-        const targetDate = new Date(data.targetDate)
-        const ts_msec = targetDate.getTime()
-
-        let document = doc(db,'users',currentUser.uid,'notes',noteId);
-        updateDoc(document,( {
-            title : data.title,
-            badges: data.badges,
-            rt:data.rt,
-            body:data.rt.replace(/<[^>]+>/g, ''),
-            status:data.status,
-            evidence:data.evidence,
-            plannedHrs:data.plannedHrs,
-            completedHrs:data.completedHrs,
-            actionType:data.actionType,
-            noteType:data.noteType,
-            targetDate:Timestamp.fromDate(targetDate),
-            timestamp:Timestamp.fromDate(targetDate),
-            studentClass:data.studentClass,
-            crits:data.crits,
-            ts_msec: ts_msec
-        } ))
-        .then(() => {
-            if(note.noteType === "TermGoals"){
-                const termGoals = {
-                    classId: note.studentClass.value,
-                    className: note.studentClass.label,
-                    noteId: note.id,
-                    startDate: ts_msec,
-                    crits: data.crits
-                }     
-                console.log(termGoals)           
-                updateDoc(doc(db,"users",currentUser.uid),
-                {termGoals: arrayRemove(previousTermGoals)})
-                .then(() => {
-                    updateDoc(doc(db,"users",currentUser.uid),
-                    {termGoals: arrayUnion(termGoals)})
-                })
-            } else if(note.noteType === "Assessment"){
-                const nextAssessment = {
-                    classId: note.studentClass.value,
-                    className: note.studentClass.label,
-                    noteId: note.id,
-                    plannedDate: ts_msec,
-                    crits: data.crits
-                }  
-                updateDoc(doc(db,"users",currentUser.uid),
-                {nextTarget: arrayRemove(previousAssessment)})
-                .then(() => {
-                    updateDoc(doc(db,"users",currentUser.uid),
-                    {nextTarget: arrayUnion(nextAssessment)})
-                })              
-            } else if(note.noteType === "ActionItem"){
-                const nextActionItem = {
-                    classId: data.studentClass.value,
-                    className: data.studentClass.label,
-                    noteId: note.id,
-                    ts_msec: ts_msec,
-                    title: data.title,
-                    body: data.rt.replace(/<[^>]+>/g, '')
-                }  
-                updateDoc(doc(db,"users",currentUser.uid,'userLists',"notesList"),
-                {notes: arrayRemove(previousActionItem)})
-                .then(() => {
-                    updateDoc(doc(db,"users",currentUser.uid,'userLists',"notesList"),
-                    {notes: arrayUnion(nextActionItem)})
-                })    
-            }
-        })
-        .then(()=>{
-            console.log("Note edited")
-            //handleClose();
-        })
-    }
-
-    const newNote = (data) => {
-
-        const targetDate = new Date(data.targetDate)
-        const ts_msec = targetDate.getTime()
-        console.log(data)
-
-        const newNote = {
-            title: data.title,
-            createdAt: new Date().toISOString(),
-            //timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            timestamp: Timestamp.fromDate(targetDate),
-            uid: currentUser.uid,
-            badges: data.badges,
-            author: currentUser.displayName,
-            avatar: avatar,
-            rt: data.rt,
-            body:data.rt.replace(/<[^>]+>/g, ''),
-            status: data.status,
-            evidence:data.evidence,
-            plannedHrs:data.plannedHrs,
-            completedHrs:data.completedHrs,
-            actionType:data.actionType,
-            noteType:data.noteType,
-            targetDate: Timestamp.fromDate(targetDate),
-            studentClass:data.studentClass,
-            crits: data.crits,
-            ts_msec: ts_msec
-        }
-
-        addDoc(collection(db,'users',currentUser.uid,'notes'),newNote)
-        .then((docReturn)=>{
-            console.log("New note added to db")
-            if(data.noteType === "TermGoals") {
-                const termGoals = {
-                    classId: data.studentClass.value,
-                    className: data.studentClass.label,
-                    noteId: docReturn.id,
-                    startDate: ts_msec,
-                    crits: data.crits
-                }
-                console.log('Adding new termGoal to user doc')
-                updateDoc(doc(db,'users',currentUser.uid),
-                {termGoals: arrayUnion(termGoals)})
-            } else if(data.noteType === "Assessment"){
-                console.log(docReturn.id)
-                console.log(data.studentClass.value)
-                const nextAssessment = {
-                    classId: data.studentClass.value,
-                    className: data.studentClass.label,
-                    noteId: docReturn.id,
-                    plannedDate: ts_msec,
-                    crits: data.crits
-                } 
-                updateDoc(doc(db,'users',currentUser.uid),
-                {nextTarget: arrayUnion(nextAssessment)})
-            } else if(data.noteType === "ActionItem"){
-                const nextActionItem = {
-                    classId: data.studentClass.value,
-                    className: data.studentClass.label,
-                    noteId: docReturn.id,
-                    ts_msec: ts_msec,
-                    title: data.title,
-                    body: data.rt.replace(/<[^>]+>/g, '')
-                }
-                console.log('added to notesList',nextActionItem)
-                updateDoc(doc(db,"users",currentUser.uid,'userLists',"notesList"),
-                {notes: arrayUnion(nextActionItem)}) 
-            } 
-        })
-        .then(() => {
-            handleClose()
-        })
-        .catch((error) => {
-            handleClose()
-            console.error(error);
-            alert('Something went wrong' );
-        });
     }
 
     const rightNow = new Date()
 
-    return (                
+    return (<></>)
+
+    /* return (                
         <Dialog fullScreen open={open} onClose={handleClose} TransitionComponent={Transition}>
             <AppBar sx={{position: 'relative'}} >
                 <Toolbar>
@@ -413,16 +242,18 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
             }} noValidate>
                 <Grid container spacing={2}>
                     
-                    <Grid xs={4} key="studentClass">
+                    <Grid item xs={4} key="studentClass">
                         <InputLabel id="studentClass">Class</InputLabel>
                         <Controller
                             name="studentClass"
                             control={control}
+                            defaultValue={null}
                             render={({ field: { onChange, value } }) => (
                             <Select
                                 labelId="studentClass"
                                 id="studentClass"
                                 value={value}
+                                defaultValue={classes[0]}
                                 label="Classes"
                                 onChange={onChange}
                             >
@@ -433,10 +264,9 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                                 ))}
                             </Select>
                             )}
-                            defaultValue={{}}
                         />
                     </Grid>
-                    <Grid xs={4} key="noteType">
+                    <Grid item xs={4} key="noteType">
                         <InputLabel id="noteType label">Note Type</InputLabel>
                         <Controller
                             name="noteType"
@@ -459,7 +289,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                             )}
                         />
                     </Grid>
-                    <Grid xs={4} key="status">
+                    <Grid item xs={4} key="status">
                         <InputLabel id="status">Status</InputLabel>
                         <Controller
                             name="status"
@@ -481,7 +311,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                             )}
                         />
                     </Grid>
-                    <Grid xs={4} key='planned-hrs'>
+                    <Grid item xs={4} key='planned-hrs'>
                         <Box sx={{display: noteType === 'ActionItem' || noteType === 'Plan' ? 'block' : 'none'}}>
                         <Controller
                             name="plannedHrs"
@@ -502,7 +332,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                             />
                         </Box>
                     </Grid>
-                    <Grid xs={4} key='completedHrs'>
+                    <Grid item xs={4} key='completedHrs'>
                         <Box sx={{display: noteType === 'ActionItem' || noteType === 'Plan' ? 'block' : 'none'}}>
                         <Controller
                             name="completedHrs"
@@ -523,7 +353,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                             />
                         </Box>
                     </Grid>
-                    <Grid xs={4} sm={4} key='date' sx={{mt:1}}>
+                    <Grid item xs={4} sm={4} key='date' sx={{mt:1}}>
                         <InputLabel id="date label">Target Date</InputLabel>
                         <Controller
                             name="targetDate"
@@ -531,18 +361,15 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                             defaultValue={rightNow}
                             render={({ field: { onChange, value } }) => (
                             <DatePicker
-                                value={dayjs(value)}
+                                value={value}
                                 defaultValue={rightNow}
                                 onChange={onChange}
-                                slots={{
-                                    textField: params => <TextField {...params} />
-                                  }}
-                                //renderInput={(params) => <TextField {...params} />}
+                                renderInput={(params) => <TextField {...params} />}
                             />
                             )}
                         />
                     </Grid>
-                    <Grid xs={4} key='crits'>
+                    <Grid item xs={4} key='crits'>
                         <Box sx={{display: noteType === 'TermGoals' || noteType === 'Assessment' ? 'block' : 'none'}}>
                         <Controller
                             name="crits"
@@ -565,7 +392,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                     </Grid>
 
 
-                    <Grid xs={4} key="chipsBadges">
+                    <Grid item xs={4} key="chipsBadges">
                     <Box sx={{display: noteType === 'ActionItem' ? 'flex' : 'none', flexDirection:'column'}}>
                         <InputLabel id="Badges">Badges</InputLabel>
                         <Controller
@@ -596,7 +423,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                     </Box>                    
                     </Grid>    
 
-                    <Grid xs={4} key="chipsEvidence">
+                    <Grid item xs={4} key="chipsEvidence">
                     <Box sx={{display: noteType === 'ActionItem' || noteType === 'Assessment' ? 'flex' : 'none', flexDirection: 'column'}}>
                         <InputLabel id="Badges">Evidence</InputLabel>
                         <Controller
@@ -627,7 +454,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                     </Box>                    
                     </Grid>  
 
-                    <Grid xs={4} key="actionType">
+                    <Grid item xs={4} key="actionType">
                         <Box sx={{display: noteType === 'ActionItem' ? 'block' : 'none'}}>
                             <InputLabel id="action-type-label">Action Type</InputLabel>
                             <Controller
@@ -654,7 +481,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                         </Box>
                     </Grid>
 
-                    <Grid xs={12} key='title'>
+                    <Grid item xs={12} key='title'>
                     <Controller
                             name="title"
                             control={control}
@@ -675,7 +502,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                             />
                     </Grid>
 
-                    <Grid xs={12} sm={6} key='rt'>
+                    <Grid item xs={12} sm={6} key='rt'>
                         <Controller
                             name="rt"
                             control={control}
@@ -696,7 +523,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
             </Box>
             </form>
         </Dialog>
-    );
+    ); */
 }
 
 export default NewNote;

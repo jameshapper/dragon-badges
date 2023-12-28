@@ -10,7 +10,7 @@ import { FormControl, InputLabel, Select, MenuItem, Box, Typography, Grid, TextF
 export default function BadgeForm() {
 
     const badgeData = useLoaderData()
-    const history = useNavigate()
+    const navigate = useNavigate()
     const { badgeId } = useParams()
     const isAddMode = !badgeId
 
@@ -86,7 +86,7 @@ export default function BadgeForm() {
         await updateDoc(badgeListRef,{
             badges: arrayUnion(newBadgeListItem)
         })
-        history('/badges')
+        navigate('/badges')
         // add error handling somehow
     }
 
@@ -109,7 +109,7 @@ export default function BadgeForm() {
         await updateDoc(badgeListRef,{
             badges: arrayUnion(updatedBadgeListItem)
         })
-        history('/badges')
+        navigate('/badges')
         // add error handling
     }
 
@@ -120,7 +120,7 @@ export default function BadgeForm() {
             <Typography>New Badge Form</Typography>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <Box sx={{px:2}}>
-                    <Button onClick={() => history('/badges')} variant="contained" sx={{m:2}}>
+                    <Button onClick={() => navigate('/badges')} variant="contained" sx={{m:2}}>
                     Cancel
                     </Button>
                     <Button type="submit" variant="contained" color="primary" sx={{m:2}}>
