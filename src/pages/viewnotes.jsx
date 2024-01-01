@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from 'react'
-import { serverTimestamp, increment } from "firebase/firestore";
+import { serverTimestamp, increment, where, getDocs, query, collectionGroup, addDoc, collection, doc, updateDoc } from "firebase/firestore";
 
 import { db } from '../firebase';
 import { UserContext } from '../contexts/usercontext';
@@ -95,15 +95,14 @@ export default function ViewNotes({note, handleViewClose, viewOpen }) {
     useEffect(() => {
         
         if(noteId && studentId){
-            return db.collectionGroup("comments")
-            .where("studentId", "==", studentId)
-            .where("noteId","==",noteId)
-            .get()
+            getDocs(query(collectionGroup(db,"comments")
+            ,where("studentId", "==", studentId)
+            ,where("noteId","==",noteId)))
             .then((querySnapshot) => {
                 const commentsData = [];
-                querySnapshot.forEach((doc) => {
-                    commentsData.push({ ...doc.data(), id: doc.id })
-                    console.log("comment doc id is "+doc.id)
+                querySnapshot.forEach((commentDoc) => {
+                    commentsData.push({ ...commentDoc.data(), id: commentDoc.id })
+                    console.log("comment doc id is "+commentDoc.id)
                 })
                 setComments(commentsData)
             })
@@ -129,15 +128,15 @@ export default function ViewNotes({note, handleViewClose, viewOpen }) {
             studentId: studentId,
             noteId: noteId
         }
-        db.collection('users').doc(studentId).collection('notes').doc(noteId).collection('comments').add(newComment)
+        addDoc(collection(db,'users',studentId,'notes',noteId,'comments'),newComment)
         .then(()=>{
             console.log("New comment added to db")
             handleViewClose()
             setCommentRt("")
         })
         .then(() => {
-            let noteRef = db.collection('users').doc(studentId).collection('notes').doc(noteId)
-            noteRef.update({ commentNum: increment(1)})
+            let noteRef = doc(db,'users',studentId,'notes',noteId)
+            updateDoc(noteRef,({ commentNum: increment(1)}))
         })
         .catch((error) => {
             handleViewClose()

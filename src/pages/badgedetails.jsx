@@ -1,6 +1,6 @@
-import { useEffect, useState, useContext } from 'react'
+import { useState, useContext } from 'react'
 import { db, storage } from '../firebase';
-import { getDoc, doc, query, getDocs, updateDoc, where, collection, addDoc, arrayRemove, arrayUnion } from "firebase/firestore";
+import { doc, query, getDocs, updateDoc, where, collection, addDoc, arrayRemove, arrayUnion } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { UserContext } from '../contexts/usercontext';
 
@@ -12,31 +12,16 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CircularProgress from '@mui/material/CircularProgress';
 import { Dialog, Typography, Button, ButtonGroup, Table, TableContainer, TableHead, TableRow, TableCell, TableBody, Paper, Card, CardMedia, DialogContent } from '@mui/material'
 
-
-export function loader({ params }) {
-    return getBadge(params.badgeId)
-}
-
-async function getBadge(badgeId) {
-    const badgeDocRef = doc(db,"badges",badgeId)
-    const badge = await getDoc(badgeDocRef)
-    const badgeData = badge.data()
-    return {...badgeData, badgeId: badgeId}
-}
-
 export default function BadgeDetails() {
 
     const { badgeId } = useParams()
     const { currentUser, isAdmin } = useContext(UserContext)
-    //const [ badgeDetails, setBadgeDetails ] = useState({})
-    const [ updateBadge, setUpdateBadge ] = useState(false)
     const [ refresh, setRefresh ] = useState(false)
-    //const [ previousBadgeSummary, setPreviousBadgeSummary ] = useState()
-    //const [ uiLoading, setUiLoading ] = useState(true)
+
     const uiLoading = false
     const [ badgeAddDialog, setAddBadgeDialog ] = useState(false)
 
-    const history = useNavigate()
+    const navigate = useNavigate()
     
     const badgeDetails = useLoaderData()
     console.log(badgeDetails)
@@ -50,63 +35,7 @@ export default function BadgeDetails() {
         status: badgeDetails.status
     }
 
-/*     useEffect(() => {
-        setUiLoading(true)
-        if(badgeId){
-            const badgeDocRef = doc(db,"badges",badgeId)
-            getDoc(badgeDocRef)
-            .then((doc)=> {
-                if(doc.exists){
-                    let badgeData = doc.data()
-                    setBadgeDetails({...badgeData, badgeId: badgeId})
-                    console.log('badgeData title is '+badgeData.badgename)
-                    const previous = {
-                        badgename: doc.data().badgename,
-                        id: badgeId,
-                        description: doc.data().description,
-                        imageUrl: doc.data().imageUrl,
-                        badgelevel: parseInt(doc.data().badgelevel),
-                        totalcrits: parseInt(doc.data().totalcrits),
-                        status: doc.data().status
-                    }
-                    setPreviousBadgeSummary(previous)
-                    setUiLoading(false)
-                } else {
-                    alert("I can't find that document")
-                }
-                setUiLoading(false)
-            })
-        }
-
-    }, [badgeId]); */
-
-    useEffect(() => {
-        if(updateBadge){ 
-            const userMyBadgesRef = collection(db,'users',currentUser.uid,'myBadges')
-            addDoc(userMyBadgesRef, {...badgeDetails,uid: currentUser.uid, progress:0})
-            .then((doc)=>{
-                console.log('New badge aspiration added')
-                const newBadge = {
-                    badgename:badgeDetails.badgename,
-                    myBadgeId:doc.id,
-                    crits:badgeDetails.totalcrits,
-                    critsAwarded: 0,
-                    progress: 0,
-                    evidence: []
-                  }
-                const userDocRef = doc(db,'users',currentUser.uid)
-                updateDoc(userDocRef,{
-                    [`myBadgesMap.${badgeId}`]:newBadge
-                })
-                setUpdateBadge(false)
-                setAddBadgeDialog(false)
-                history.push('/myBadges')
-            })
-        }
-    },[updateBadge, currentUser.uid, badgeDetails, badgeId, history])
-
     const handleViewClose = () => setAddBadgeDialog(false);
-
 
     const handleAddBadge = (e) => {
         e.preventDefault()
@@ -117,9 +46,27 @@ export default function BadgeDetails() {
                 const querySnapshot = await getDocs(queryRef)
                 console.log('number of docs in snapshot is '+querySnapshot.docs.length)
                 if(querySnapshot.docs.length === 0){
-                    setUpdateBadge(true)
+                    const userMyBadgesRef = collection(db,'users',currentUser.uid,'myBadges')
+                    console.log('we want to add ',{...badgeDetails,uid: currentUser.uid, progress:0})
+                    await addDoc(userMyBadgesRef, {...badgeDetails,uid: currentUser.uid, progress:0})
+                    .then((addedBadge)=>{
+                        console.log('New badge aspiration added')
+                        const newBadge = {
+                            badgename:badgeDetails.badgename,
+                            myBadgeId:addedBadge.id,
+                            crits:badgeDetails.totalcrits,
+                            critsAwarded: 0,
+                            progress: 0,
+                            evidence: []
+                            }
+                        const userDocRef = doc(db,'users',currentUser.uid)
+                        updateDoc(userDocRef,{
+                            [`myBadgesMap.${badgeId}`]:newBadge
+                        })
+                        setAddBadgeDialog(false)
+                        navigate('/myBadges')
+                    })
                 } else {
-                    setUpdateBadge(false)
                     setAddBadgeDialog(false)
                     alert('Maybe you already have this badge?')
                 }

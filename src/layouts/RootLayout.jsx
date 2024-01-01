@@ -28,7 +28,7 @@ const drawerWidth = 200;
     { 
         text: 'My Plans', 
         icon: <NotesIcon color="secondary" />, 
-        path: '/' 
+        path: '/dashboard' 
     },
     { 
         text: 'Account', 

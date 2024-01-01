@@ -1,14 +1,12 @@
-import { useContext, useState, useEffect } from 'react'
-import { db } from '../firebase'
-import { UserContext } from '../userContext'
+import { useContext } from 'react'
+import { UserContext } from '../contexts/usercontext'
 import Progress from './progressbar'
-import { useParams, Link } from 'react-router-dom'
+import { Link, useLoaderData } from 'react-router-dom'
 
 //import { AssignmentInd } from '@material-ui/icons';
 
 import { 
     Typography, 
-    CircularProgress,
     Button, 
     Paper, 
     Toolbar, 
@@ -22,12 +20,18 @@ import {
 
 export default function MyBadgeDetails() {
 
-    const { myBadgeId, studentId } = useParams()
+    //const { myBadgeId } = useParams()
     const { isAdmin } = useContext(UserContext)
-    const [ uiLoading, setUiLoading ] = useState(true)
+    //const [ uiLoading, setUiLoading ] = useState(true)
 
-    const [ badgeDetails, setBadgeDetails ] = useState({})
-    const [ studentName, setStudentName ] = useState("")
+    //const [ badgeDetails, setBadgeDetails ] = useState({})
+    //const [ studentName, setStudentName ] = useState("")
+
+    const badgeDetails = useLoaderData()
+    const studentName = "Temp Name"
+    const studentId = badgeDetails.studentId 
+    const myBadgeId = badgeDetails.myBadgeId
+
 
     //const { aStudentId, aStudentName } = useContext(StudentContext)
 
@@ -41,18 +45,8 @@ export default function MyBadgeDetails() {
     const studentNameRef = useRef(aStudentName) */
 
     //console.log('selectedStudentId is '+selectedStudentId)
-
-/*     useEffect(() => {
-        setUiLoading(true)
-        db.collection("users").doc(studentId).get()
-        .then(doc => {
-            setStudentName(doc.data().firstName)
-            setUiLoading(false)
-        })
-
-    },  [studentId]) */
     
-    useEffect(() => {
+/*     useEffect(() => {
 
         setUiLoading(true)
         db.collection("users").doc(studentId).get()
@@ -79,7 +73,7 @@ export default function MyBadgeDetails() {
         })
 
 
-    }, [ myBadgeId, studentId ]);
+    }, [ myBadgeId, studentId ]); */
 
     const critsColor = (critsAward, critsMax) => {
 
@@ -98,22 +92,6 @@ export default function MyBadgeDetails() {
         }
     }
 
-
-    if (uiLoading === true) {
-        return (
-            <Box sx={{flexGrow:1, p:3}} >
-                <Toolbar />
-                {uiLoading && <CircularProgress size={150} sx={{
-                    position: 'fixed',
-                    zIndex: '1000',
-                    height: '31px',
-                    width: '31px',
-                    left: '50%',
-                    top: '35%'
-                }} />}
-            </Box>
-        );
-    } else {
     return (
         <>
             <Toolbar />
@@ -219,5 +197,5 @@ export default function MyBadgeDetails() {
                 }
             </Box>
         </>
-    )}
+    )
 }

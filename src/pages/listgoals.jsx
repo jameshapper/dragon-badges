@@ -19,9 +19,6 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit'
 
-//https://firebasestorage.googleapis.com/v0/b/progressnotes-b6fc9.appspot.com/o/GoalTargetEditted.png?alt=media&token=59a794c9-225a-49c9-949e-6ffa4bb7c188
-//https://firebasestorage.googleapis.com/v0/b/progressnotes-b6fc9.appspot.com/o/GoalToInkscapeEditted.svg?alt=media&token=e935e1c8-46fb-4015-bb76-9437294546fc
-
 // ListGoals propTypes and component
 
 ListGoals.propTypes = {
@@ -34,8 +31,8 @@ ListGoals.propTypes = {
 
 export default function ListGoals({notes, canEdit, classes, badges, studentClass}) {
 
-    const PlansIcon = "https://firebasestorage.googleapis.com/v0/b/progressnotes-b6fc9.appspot.com/o/GoalTargetEditted.png?alt=media&token=59a794c9-225a-49c9-949e-6ffa4bb7c188"
-    const GoalsIcon = "https://firebasestorage.googleapis.com/v0/b/progressnotes-b6fc9.appspot.com/o/GoalToInkscapeEditted.svg?alt=media&token=e935e1c8-46fb-4015-bb76-9437294546fc"
+    const PlansIcon = "https://firebasestorage.googleapis.com/v0/b/dragon-badges.appspot.com/o/GoalTargetEditted.png?alt=media&token=698c0dac-eba1-484b-b04c-261148771b9f"
+    const GoalsIcon = "https://firebasestorage.googleapis.com/v0/b/dragon-badges.appspot.com/o/GoalToInkscapeEditted.svg?alt=media&token=ee22f16f-bf83-4c0c-9a60-f47714d59145"
 
     const [ viewOpen, setViewOpen ] = useState(false)
     const [ open, setOpen ] = useState(false)

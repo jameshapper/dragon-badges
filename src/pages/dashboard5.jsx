@@ -36,7 +36,7 @@ function Note() {
     const [ open, setOpen ] = useState(false)
     const [ buttonType, setButtonType ] = useState('New')
 
-    const [ studentClass, setStudentClass ] = useState({label: "notRealClassKey", value: "see teacher to enroll in a class"})
+    const [ studentClass, setStudentClass ] = useState({label: "", value: "see teacher to enroll in a class"})
 
     const { termGoals, currentPlans, summaryEvidence, classes, badges } = useLoaderData()
     const uiLoading = false

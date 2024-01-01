@@ -426,7 +426,6 @@ function ActionItemRow(props) {
       default: ''
     }
     const status = nextDate ? "isNext" : prevDate ? "isPrev" : "default"
-    console.log('font is '+statusFont[status])
 
     return (
         <TableRow

@@ -1,6 +1,6 @@
-import { doc, getDoc } from 'firebase/firestore'
+//import { redirect } from 'react-router-dom';
 import { db } from './firebase';
-import { collectionGroup, where, getDocs, query, collection } from 'firebase/firestore'
+import { doc, getDoc, collectionGroup, where, getDocs, query, collection } from 'firebase/firestore'
 
 // badgesLoader for Badges component at badges route
 export function badgesLoader() {
@@ -57,7 +57,7 @@ async function getBadge(badgeId) {
     const badgeRef = doc(db, "badges", badgeId)
     const badge = await getDoc(badgeRef)
     const badgeData = badge.data()
-    return badgeData
+    return {...badgeData, badgeId:badgeId}
 }
 
 // end of badgeEditLoader
@@ -95,15 +95,13 @@ async function getActionItems(userId) {
     where("noteType","==","ActionItem")
     );
     const querySnapshot = await getDocs(notes)
-    console.log('querySnapshot',querySnapshot)
     const actionItems = []
     if (querySnapshot.empty){
         console.log('no action items in snapshot')
     } 
     else {
         querySnapshot.forEach((actionItemsdoc) => {
-            actionItemsdoc => actionItems.push({ ...actionItemsdoc.data(), id: actionItemsdoc.id })
-            console.log(actionItemsdoc.id, ' => ', actionItemsdoc.data())
+            actionItems.push({ ...actionItemsdoc.data(), id: actionItemsdoc.id })
         });
     }
 
@@ -125,8 +123,7 @@ async function getAssessments(userId) {
     } 
     else {
         querySnapshot.forEach((assessmentsDoc) => {
-            assessmentsDoc => assessmentItems.push({ ...assessmentsDoc.data(), id: assessmentsDoc.id })
-            console.log(assessmentsDoc.id, ' => ', assessmentsDoc.data())
+            assessmentItems.push({ ...assessmentsDoc.data(), id: assessmentsDoc.id })
         });
     }
 
@@ -148,8 +145,7 @@ async function getTermGoals(userId) {
     } 
     else {
         querySnapshot.forEach((termGoalsDoc) => {
-            termGoalsDoc => termGoals.push({ ...termGoalsDoc.data(), id: termGoalsDoc.id })
-            console.log(termGoalsDoc.id, ' => ', termGoalsDoc.data())
+            termGoals.push({ ...termGoalsDoc.data(), id: termGoalsDoc.id })
         });
     }
 
@@ -171,8 +167,7 @@ async function getPlans(userId) {
     } 
     else {
         querySnapshot.forEach((plansDoc) => {
-            plansDoc => plans.push({ ...plansDoc.data(), id: plansDoc.id })
-            console.log(plansDoc.id, ' => ', plansDoc.data())
+            plans.push({ ...plansDoc.data(), id: plansDoc.id })
         });
     }
     return plans
@@ -203,3 +198,67 @@ async function getStudentData(userId) {
 }
 
 // end of notesLoader
+
+// myBadges loader
+export function myBadgesLoader(uid) {
+
+    return () => {
+        return getStudentBadges(uid)
+    }
+}
+
+export function studentBadgesLoader({params}) {
+
+    return getStudentBadges(params.studentId)
+}
+
+async function getStudentBadges(studentId) {
+    console.log('studentId from getStudentBadges ',studentId)
+    const studentRef = doc(db, "users", studentId)
+    const studentDoc = await getDoc(studentRef)
+    const studentName = studentDoc.data().firstName
+    console.log('studentName ',studentName)
+    const badgeData = await getDocs(query(collection(db,'users',studentId,'myBadges'),where("uid","==",studentId)))
+    console.log('did we get badges?')
+    const badgeList = []
+    badgeData.forEach((badgeDoc) => {
+        badgeList.push({...badgeDoc.data(), id: badgeDoc.id})
+        console.log(badgeDoc.id, " => ", badgeDoc.data());
+    })
+    return { studentName, badgeList }
+}
+
+// myBadgeDetailsLoader
+
+/* export function myBadgeDetailsLoader ({params}) {
+    return getMyBadgeDetails(params.studentId, params.badgeId)
+} */
+
+export function myBadgeDetailsLoader(userContext) {
+    return ({params}) => {
+        const { currentUser } = userContext
+        console.log('in loader params and current user? ', params, currentUser)
+        const myBadgeId = params.myBadgeId
+        let studentId = params.studentId
+        if(!studentId){
+            studentId = currentUser.uid
+        }
+        return getMyBadgeDetails(studentId, myBadgeId)
+    }
+}
+
+async function getMyBadgeDetails(studentId, myBadgeId) {
+    console.log('studentId is ',studentId)
+    const studentBadge = await getDoc(doc(db,"users",studentId,"myBadges",myBadgeId))
+    return {...studentBadge.data(), myBadgeId: myBadgeId, studentId: studentId }
+}
+
+// student loader
+export function studentLoader({ params }) {
+    return getBadge(params.badgeId)
+}
+
+// feedback loader
+export function feedbackLoader({ params }) {
+    return getBadge(params.badgeId)
+}

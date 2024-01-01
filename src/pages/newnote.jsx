@@ -64,9 +64,8 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
     }
 
     const findClassId = (classLabel) => {
-        classes.filter(obj => {
-            return obj.label == classLabel
-        })
+        const classWithLabel = classes.find(obj => obj.label == classLabel)
+        return classWithLabel.value
     }
 
     console.log('in newnote4 classes and badges are '+JSON.stringify(classes)+" "+JSON.stringify(badges))
@@ -75,9 +74,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
     const { currentUser, avatar } = useContext(UserContext)
 
     const { handleSubmit, control, setValue, watch } = useForm({
-        defaultValues: {
-            studentClass: {label: "some label", value: "some value"}
-          }
+
     });
 
     const noteType = watch("noteType",initNoteType)
@@ -127,7 +124,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                         setValue(field, new Date(1000*note[field].seconds))
                         console.log('targetDate seconds is '+JSON.parse(JSON.stringify(note[field])).seconds)
                     } else if(field === 'studentClass'){
-                        setValue(field, studentClass)
+                        setValue(field, studentClass.label)
                         console.log('student class '+JSON.stringify(studentClass))
                     } else if(field === 'rt'){
                         if(note[field] === ""){
@@ -146,7 +143,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
             })
 
         } else {
-            setValue("studentClass",studentClass)
+            setValue("studentClass",studentClass.label)
         }   
     },[buttonType, note, setValue, studentClass])
 
@@ -222,6 +219,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
     const updateNote = (noteId, data) => {
         handleClose()
 
+        const classId = findClassId(data.studentClass)
         const targetDate = new Date(data.targetDate)
         const ts_msec = targetDate.getTime()
 
@@ -239,7 +237,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
             noteType:data.noteType,
             targetDate:Timestamp.fromDate(targetDate),
             timestamp:Timestamp.fromDate(targetDate),
-            studentClass:data.studentClass,
+            studentClass:{label: data.studentClass, value: classId},
             crits:data.crits,
             ts_msec: ts_msec
         } ))
@@ -275,8 +273,8 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                 })              
             } else if(note.noteType === "ActionItem"){
                 const nextActionItem = {
-                    classId: data.studentClass.value,
-                    className: data.studentClass.label,
+                    classId: findClassId(data.studentClass),
+                    className: data.studentClass,
                     noteId: note.id,
                     ts_msec: ts_msec,
                     title: data.title,
@@ -298,6 +296,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
 
     const newNote = (data) => {
 
+        const classId = findClassId(data.studentClass)
         const targetDate = new Date(data.targetDate)
         const ts_msec = targetDate.getTime()
         console.log(data)
@@ -320,7 +319,7 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
             actionType:data.actionType,
             noteType:data.noteType,
             targetDate: Timestamp.fromDate(targetDate),
-            studentClass:data.studentClass,
+            studentClass:{label: data.studentClass, value: classId},
             crits: data.crits,
             ts_msec: ts_msec
         }
@@ -330,8 +329,8 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
             console.log("New note added to db")
             if(data.noteType === "TermGoals") {
                 const termGoals = {
-                    classId: data.studentClass.value,
-                    className: data.studentClass.label,
+                    classId: classId,
+                    className: data.studentClass,
                     noteId: docReturn.id,
                     startDate: ts_msec,
                     crits: data.crits
@@ -341,10 +340,9 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                 {termGoals: arrayUnion(termGoals)})
             } else if(data.noteType === "Assessment"){
                 console.log(docReturn.id)
-                console.log(data.studentClass.value)
                 const nextAssessment = {
-                    classId: data.studentClass.value,
-                    className: data.studentClass.label,
+                    classId: classId,
+                    className: data.studentClass,
                     noteId: docReturn.id,
                     plannedDate: ts_msec,
                     crits: data.crits
@@ -353,8 +351,8 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                 {nextTarget: arrayUnion(nextAssessment)})
             } else if(data.noteType === "ActionItem"){
                 const nextActionItem = {
-                    classId: data.studentClass.value,
-                    className: data.studentClass.label,
+                    classId: classId,
+                    className: data.studentClass,
                     noteId: docReturn.id,
                     ts_msec: ts_msec,
                     title: data.title,
@@ -427,13 +425,13 @@ function NewNote({open, buttonType, noteForEdit, handleClose, classes, badges, s
                                 onChange={onChange}
                             >
                                 {classes && classes.length && classes.map(aClass => (
-                                <MenuItem key={aClass.value} value={aClass}>
+                                <MenuItem key={aClass.label} value={aClass.label}>
                                     <ListItemText primary={aClass.label} />
                                 </MenuItem>
                                 ))}
                             </Select>
                             )}
-                            defaultValue={{}}
+                            defaultValue=''
                         />
                     </Grid>
                     <Grid xs={4} key="noteType">

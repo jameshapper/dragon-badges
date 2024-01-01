@@ -18,11 +18,17 @@ import UserProvider from "./contexts/usercontext"
   // pages
 import Login from "./pages/login"
 import Badges from "./pages/badges"
-import { badgesLoader, badgeEditLoader, classesLoader, notesLoader } from "./apiloaders"
-import BadgeDetails, { loader as badgeDetailsLoader } from "./pages/badgedetails"
+import { badgesLoader, badgeEditLoader, classesLoader, notesLoader, studentLoader, feedbackLoader, studentBadgesLoader, myBadgeDetailsLoader } from "./apiloaders"
+import BadgeDetails from "./pages/badgedetails"
+import MyBadges from "./pages/mybadges"
+import MyBadgesRedirect from "./pages/mybadgesredirect";
+import MyBadgeDetails from "./pages/mybadgesdetails"
 import BadgeForm from "./pages/badgeform"
 import Note from "./pages/dashboard5"
 import TeacherClasses from "./pages/classes"
+import Feedback from "./pages/feedback"
+import StudentDetails from "./pages/studentdetails"
+import FeedbackView from "./pages/feedbackview"
 
 import { ThemeProvider, createTheme } from "@mui/material/styles"
 import { CssBaseline } from "@mui/material"
@@ -51,7 +57,6 @@ const theme = createTheme({
 
 const AppRoot = () => {
     const userContext = React.useContext(UserContext);
-    console.log('userContext',userContext)
 
     const router = createBrowserRouter(
     createRoutesFromElements(
@@ -61,12 +66,19 @@ const AppRoot = () => {
         <Route path="temp" element={<div>Hello temp!</div>} />
         <Route element={<RootLayout/>}>
             <Route path="badges" element={<Badges />} loader={badgesLoader} />
-            <Route path="badges/:badgeId" element={<BadgeDetails />} loader={badgeDetailsLoader}/>    
+            <Route path="badges/:badgeId" element={<BadgeDetails />} loader={badgeEditLoader}/>    
             <Route path="badgeForm" element={<BadgeForm />} />
             <Route path="badgeForm/:badgeId" element={<BadgeForm />} loader={badgeEditLoader}/>
             <Route path="dashboard" element={<Note />} loader={notesLoader(userContext)} />
             <Route path="classes" element={<TeacherClasses />} loader={classesLoader(userContext)}/>
             <Route path="addclass" element={<AddClass />}/>
+            <Route path="/feedback/:feedbackId" element={<Feedback />} loader={feedbackLoader}/>
+						<Route path="/students/:studentId" element={<StudentDetails />} loader={studentLoader}/>
+            <Route path="/myBadges" element={<MyBadgesRedirect />}/>
+            <Route path="/students/:studentId/myBadges" element={<MyBadges />} loader={studentBadgesLoader}/>
+						<Route path="/myBadges/:myBadgeId" element={<MyBadgeDetails />} loader={myBadgeDetailsLoader(userContext.currentUser.uid)}/>
+            <Route path="/students/:studentId/myBadges/:myBadgeId" element={<MyBadgeDetails />} loader={myBadgeDetailsLoader(userContext)}/>
+            <Route path="/students/:studentId/myBadges/:myBadgeId/feedback/:feedbackId" element= {<FeedbackView />}/>
         </Route>
 
         <Route path="*" element={<Login />} />

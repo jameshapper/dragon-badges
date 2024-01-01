@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react'
 import { db } from '../firebase';
 import { serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { useHistory, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { UserContext } from '../contexts/usercontext';
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
@@ -33,7 +33,7 @@ export default function Feedback() {
 
     const { feedbackId } = useParams()
     const location = useLocation()
-    const history = useHistory()
+    const history = useNavigate()
     const { selectedStudentId='', badgeDetails, selectedStudentName="A Student" } = location.state || ''
 
     console.log('selectedStudentId is '+selectedStudentId)
