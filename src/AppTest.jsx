@@ -18,7 +18,7 @@ import UserProvider from "./contexts/usercontext"
   // pages
 import Login from "./pages/login"
 import Badges from "./pages/badges"
-import { badgesLoader, badgeEditLoader, classesLoader, notesLoader, studentLoader, feedbackLoader, studentBadgesLoader, myBadgeDetailsLoader } from "./apiloaders"
+import { badgesLoader, badgeEditLoader, classesLoader, notesLoader, studentLoader, feedbackLoader, studentBadgesLoader, myBadgeDetailsLoader, studentListLoader } from "./apiloaders"
 import BadgeDetails from "./pages/badgedetails"
 import MyBadges from "./pages/mybadges"
 import MyBadgesRedirect from "./pages/mybadgesredirect";
@@ -29,6 +29,8 @@ import TeacherClasses from "./pages/classes"
 import Feedback from "./pages/feedback"
 import StudentDetails from "./pages/studentdetails"
 import FeedbackView from "./pages/feedbackview"
+import Account from "./pages/account"
+import Students from "./pages/students"
 
 import { ThemeProvider, createTheme } from "@mui/material/styles"
 import { CssBaseline } from "@mui/material"
@@ -72,6 +74,7 @@ const AppRoot = () => {
             <Route path="dashboard" element={<Note />} loader={notesLoader(userContext)} />
             <Route path="classes" element={<TeacherClasses />} loader={classesLoader(userContext)}/>
             <Route path="addclass" element={<AddClass />}/>
+            <Route path="/account" element={<Account />}/>
             <Route path="/feedback/:feedbackId" element={<Feedback />} loader={feedbackLoader}/>
 						<Route path="/students/:studentId" element={<StudentDetails />} loader={studentLoader}/>
             <Route path="/myBadges" element={<MyBadgesRedirect />}/>
@@ -79,6 +82,8 @@ const AppRoot = () => {
 						<Route path="/myBadges/:myBadgeId" element={<MyBadgeDetails />} loader={myBadgeDetailsLoader(userContext.currentUser.uid)}/>
             <Route path="/students/:studentId/myBadges/:myBadgeId" element={<MyBadgeDetails />} loader={myBadgeDetailsLoader(userContext)}/>
             <Route path="/students/:studentId/myBadges/:myBadgeId/feedback/:feedbackId" element= {<FeedbackView />}/>
+            <Route path="/students" element={<Students />} loader={studentListLoader(userContext.currentUser.uid)}/>
+            <Route path="/feedback" element={<Feedback />}/>
         </Route>
 
         <Route path="*" element={<Login />} />

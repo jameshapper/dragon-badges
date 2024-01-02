@@ -253,9 +253,27 @@ async function getMyBadgeDetails(studentId, myBadgeId) {
     return {...studentBadge.data(), myBadgeId: myBadgeId, studentId: studentId }
 }
 
-// student loader
+// student loaders
 export function studentLoader({ params }) {
     return getBadge(params.badgeId)
+}
+
+export function studentListLoader(teacherId) {
+    return () => {
+        return getStudents(teacherId)
+    }
+}
+
+async function getStudents(teacherId) {
+    const studentList = await getDoc(doc(db,"adminDocs","studentList"))
+    const studentsArray = studentList.data().students
+    const teacherClassDocs = await getDocs(collection(db,"users",teacherId,"teacherClasses"))
+    const classData = []
+    teacherClassDocs.forEach((teacherClassDoc) => {
+        classData.push({...teacherClassDoc.data(), id: teacherClassDoc.id})
+    })
+    console.log("class data is "+classData)
+    return { studentsArray, classData }
 }
 
 // feedback loader

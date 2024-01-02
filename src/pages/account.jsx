@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from 'react';
 import { db, storage } from '../firebase';
-import { useHistory } from 'react-router';
+import { useNavigate } from 'react-router';
 
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -23,7 +23,7 @@ function Account() {
 	const [ fileUpload, setFileUpload ] = useState(null)
 	const [preview, setPreview] = useState()
 
-	const history = useHistory()
+	const navigate = useNavigate()
   
     const onFileChange = async (e) => {
         setFileUpload(e.target.files[0])
@@ -73,7 +73,7 @@ function Account() {
             })
             .then(function() {
             console.log("update appears successful")
-            history.push('/')
+            navigate('/')
             }).catch(function(error) {
                 console.log('problem updating image ')
                 console.log(error)

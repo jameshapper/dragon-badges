@@ -20,60 +20,11 @@ import {
 
 export default function MyBadgeDetails() {
 
-    //const { myBadgeId } = useParams()
     const { isAdmin } = useContext(UserContext)
-    //const [ uiLoading, setUiLoading ] = useState(true)
-
-    //const [ badgeDetails, setBadgeDetails ] = useState({})
-    //const [ studentName, setStudentName ] = useState("")
-
     const badgeDetails = useLoaderData()
     const studentName = "Temp Name"
     const studentId = badgeDetails.studentId 
     const myBadgeId = badgeDetails.myBadgeId
-
-
-    //const { aStudentId, aStudentName } = useContext(StudentContext)
-
-/*     console.log('context aStudentId is '+aStudentId)
-    console.log('context aStudentName is '+aStudentName) */
-
-/*     const location = useLocation()
-    const { selectedStudentId='', selectedStudentName='A Student' } = location.state || ''
-    //const lookupId = useRef(selectedStudentId)
-    const lookupId = useRef(aStudentId)
-    const studentNameRef = useRef(aStudentName) */
-
-    //console.log('selectedStudentId is '+selectedStudentId)
-    
-/*     useEffect(() => {
-
-        setUiLoading(true)
-        db.collection("users").doc(studentId).get()
-        .then(doc => {
-            setStudentName(doc.data().firstName)
-        })
-        .then(() => {
-            if(myBadgeId){
-
-                return db.collection("users").doc(studentId).collection("myBadges").doc(myBadgeId).get()
-                .then((doc)=> {
-                    if(doc.exists){
-                        let badgeData = doc.data()
-                        setBadgeDetails({...badgeData, badgeId: myBadgeId})
-                        console.log('badgeData title is '+badgeData.badgename)
-                        setUiLoading(false)
-                    } else {
-                        alert("I can't find that document")
-                    }
-    
-                })
-            }
-            setUiLoading(false)
-        })
-
-
-    }, [ myBadgeId, studentId ]); */
 
     const critsColor = (critsAward, critsMax) => {
 

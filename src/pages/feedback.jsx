@@ -33,7 +33,7 @@ export default function Feedback() {
 
     const { feedbackId } = useParams()
     const location = useLocation()
-    const history = useNavigate()
+    const navigate = useNavigate()
     const { selectedStudentId='', badgeDetails, selectedStudentName="A Student" } = location.state || ''
 
     console.log('selectedStudentId is '+selectedStudentId)
@@ -181,7 +181,7 @@ export default function Feedback() {
             .update({evidence: arrayUnion(fbShortSummary)})
         })
         .then(() => {
-            history.push(`/students/${selectedStudentId}/myBadges/${badgeDetails.badgeId}`)
+            navigate(`/students/${selectedStudentId}/myBadges/${badgeDetails.badgeId}`)
         })
         .catch((error) => {
             console.error(error);
@@ -270,7 +270,7 @@ export default function Feedback() {
             .then(() => console.log('badgeDetails.criteria are now '+JSON.stringify(badgeDetails.criteria)))
         })
         .then(() => {
-            history.push(`/students/${selectedStudentId}/myBadges/${badgeDetails.badgeId}`)
+            navigate(`/students/${selectedStudentId}/myBadges/${badgeDetails.badgeId}`)
         })
         .catch((error) => {
             console.error(error);
