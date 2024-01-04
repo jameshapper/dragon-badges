@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import { db } from '../firebase';
-import { serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { serverTimestamp, arrayUnion, arrayRemove, getDoc, doc, addDoc, collection, updateDoc } from 'firebase/firestore';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { UserContext } from '../contexts/usercontext';
 import ReactQuill from "react-quill";
@@ -66,7 +66,7 @@ export default function Feedback() {
 
     useEffect(() => {
         if(!isAddMode) {
-            db.collection("users").doc(selectedStudentId).collection("myBadges").doc(badgeDetails.badgeId).collection("feedback").doc(feedbackId).get()
+            getDoc(doc(db,"users",selectedStudentId,"myBadges",badgeDetails.badgeId,"feedback",feedbackId))
             .then(feedback => {
                 const fields = ['artifactLinks','assessorComments','critsAwarded','critsMax']
                 fields.forEach(field => {
@@ -153,19 +153,19 @@ export default function Feedback() {
             sumCritsMax: sumCritsMax
         }
         
-        db.collection('users').doc(selectedStudentId).collection('myBadges').doc(badgeDetails.badgeId).collection("feedback").add(feedback)
-        .then((doc)=>{
+        addDoc(collection(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId,"feedback"),feedback)
+        .then((feedbackDoc)=>{
             const feedbackSummary = {
                 critsAwarded: data.critsAwarded,
                 critsMax: data.critsMax,
-                feedbackId: doc.id,
+                feedbackId: feedbackDoc.id,
                 createdAt: createdAt,
                 sumCritsForAssessment: sumCritsForAssessment,
                 sumCritsMax: sumCritsMax,
                 ts_msec: ts_msec
             }
             fbShortSummary = {
-                feedbackId: doc.id,
+                feedbackId: feedbackDoc.id,
                 createdAt: createdAt,
                 sumCritsForAssessment: sumCritsForAssessment,
                 sumCritsMax: sumCritsMax,
@@ -173,12 +173,12 @@ export default function Feedback() {
                 ts_msec: ts_msec 
             }
             console.log("New feedback added to db")
-            db.collection('users').doc(selectedStudentId).collection('myBadges').doc(badgeDetails.badgeId)
-            .update({evidence: arrayUnion(feedbackSummary), progress: badgeDetails.progress, criteria: badgeDetails.criteria})
+            updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId)
+            ,{evidence: arrayUnion(feedbackSummary), progress: badgeDetails.progress, criteria: badgeDetails.criteria})
         })
         .then(() => {
-            db.collection('users').doc(selectedStudentId)
-            .update({evidence: arrayUnion(fbShortSummary)})
+            updateDoc(doc(db,'users',selectedStudentId)
+            ,{evidence: arrayUnion(fbShortSummary)})
         })
         .then(() => {
             navigate(`/students/${selectedStudentId}/myBadges/${badgeDetails.badgeId}`)
@@ -234,10 +234,10 @@ export default function Feedback() {
             sumCritsMax: sumCritsMax
         }
 
-        db.collection('users').doc(selectedStudentId).collection('myBadges').doc(badgeDetails.badgeId).collection("feedback").doc(feedbackId).update(feedback)
+        updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId,"feedback",feedbackId),feedback)
         .then(()=>{
-            db.collection('users').doc(selectedStudentId).collection('myBadges').doc(badgeDetails.badgeId)
-            .update({evidence: arrayRemove(previousFeedbackSummary)})
+            updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId)
+            ,{evidence: arrayRemove(previousFeedbackSummary)})
             .then(() => {
                 const feedbackSummary = {
                     critsAwarded: data.critsAwarded,
@@ -256,16 +256,16 @@ export default function Feedback() {
                     badgeName: badgeDetails.badgename,
                     ts_msec: ts_msec
                 }
-                db.collection('users').doc(selectedStudentId).collection('myBadges').doc(badgeDetails.badgeId)
-                .update({evidence: arrayUnion(feedbackSummary), progress: badgeDetails.progress, criteria: badgeDetails.criteria})
+                updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId)
+                ,{evidence: arrayUnion(feedbackSummary), progress: badgeDetails.progress, criteria: badgeDetails.criteria})
             })
             .then(() => {
-                db.collection('users').doc(selectedStudentId)
-                .update({evidence: arrayRemove(previousShort)})
+                updateDoc(doc(db,'users',selectedStudentId)
+                ,{evidence: arrayRemove(previousShort)})
             })
             .then(() => {
-                db.collection('users').doc(selectedStudentId)
-                .update({evidence: arrayUnion(fbShortSummary)})
+                updateDoc(doc(db,'users',selectedStudentId)
+                ,{evidence: arrayUnion(fbShortSummary)})
             })
             .then(() => console.log('badgeDetails.criteria are now '+JSON.stringify(badgeDetails.criteria)))
         })

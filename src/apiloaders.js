@@ -3,7 +3,8 @@ import { db } from './firebase';
 import { doc, getDoc, collectionGroup, where, getDocs, query, collection } from 'firebase/firestore'
 
 // badgesLoader for Badges component at badges route
-export function badgesLoader() {
+export function badgesLoader({params}) {
+        console.log('THERE ARE NO params', Object.keys(params).length)
     return getBadgesAndClasses()
 }
 
@@ -45,7 +46,6 @@ export function classesLoader(userContext) {
         return getTeacherClasses(currentUser.uid)
     }
 }
-// end of badgesLoader
 
 // badgeEditLoader for editing badge at badgeForm/:badgeId route
 
@@ -258,22 +258,25 @@ export function studentLoader({ params }) {
     return getBadge(params.badgeId)
 }
 
-export function studentListLoader(teacherId) {
+export function studentListLoader(currentUser) {
     return () => {
-        return getStudents(teacherId)
+        return getStudents(currentUser)
     }
 }
 
-async function getStudents(teacherId) {
-    const studentList = await getDoc(doc(db,"adminDocs","studentList"))
-    const studentsArray = studentList.data().students
-    const teacherClassDocs = await getDocs(collection(db,"users",teacherId,"teacherClasses"))
-    const classData = []
-    teacherClassDocs.forEach((teacherClassDoc) => {
-        classData.push({...teacherClassDoc.data(), id: teacherClassDoc.id})
-    })
-    console.log("class data is "+classData)
-    return { studentsArray, classData }
+async function getStudents(currentUser) {
+    if(currentUser){
+        const studentList = await getDoc(doc(db,"adminDocs","studentList"))
+        const studentsArray = studentList.data().students
+        const teacherClassDocs = await getDocs(collection(db,"users",currentUser.uid,"teacherClasses"))
+        const classData = []
+        teacherClassDocs.forEach((teacherClassDoc) => {
+            classData.push({...teacherClassDoc.data(), id: teacherClassDoc.id})
+        })
+        console.log("class data is "+classData)
+        return { studentsArray, classData }
+    } else { return null}
+
 }
 
 // feedback loader
