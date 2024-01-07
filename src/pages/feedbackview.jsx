@@ -1,6 +1,5 @@
-import { useContext, useEffect, useState } from 'react'
-import { db } from '../firebase';
-import { useParams, Link } from 'react-router-dom';
+import { useContext } from 'react'
+import { Link, useLoaderData } from 'react-router-dom';
 import { UserContext } from '../contexts/usercontext';
 
 import { 
@@ -22,30 +21,32 @@ import Grid from '@mui/material/Unstable_Grid2';
 export default function FeedbackView() {
 
     const { isAdmin } = useContext(UserContext)
-    const { myBadgeId, studentId, feedbackId } = useParams()
+    const { feedback, badgeDetails, feedbackId, studentId } = useLoaderData()
 
-    const [ feedback, setFeedback ] = useState()
-    const [ badgeDetails, setBadgeDetails ] = useState()
+    //const [ feedback, setFeedback ] = useState()
+    //const [ badgeDetails, setBadgeDetails ] = useState()
 
-    useEffect(() => {
-        db.collection("users").doc(studentId).collection("myBadges").doc(myBadgeId).collection("feedback").doc(feedbackId).get()
-        .then(doc => {
-            if(doc.exists){
-                setFeedback(doc.data())
-                console.log('feedback doc is '+JSON.stringify(doc.data()))
+
+
+/*     useEffect(() => {
+        getDoc(doc(db,"users",studentId,"myBadges",myBadgeId,"feedback",feedbackId))
+        .then(feedbackDoc => {
+            if(feedbackDoc.exists){
+                setFeedback(feedbackDoc.data())
+                console.log('feedback doc is '+JSON.stringify(feedbackDoc.data()))
             } else {
                 alert('No feedback document')
             }
         })
-    },[feedbackId, myBadgeId, studentId])
+    },[feedbackId, myBadgeId, studentId]) */
 
-    useEffect(() => {
+/*     useEffect(() => {
         
-        if(myBadgeId){
-            return db.collection("users").doc(studentId).collection("myBadges").doc(myBadgeId).get()
-            .then((doc)=> {
-                if(doc.exists){
-                    let badgeData = doc.data()
+         if(myBadgeId){
+            return getDoc(doc(db,"users",studentId,"myBadges",myBadgeId))
+            .then((badgeDoc)=> {
+                if(badgeDoc.exists){
+                    let badgeData = badgeDoc.data()
                     setBadgeDetails({...badgeData, badgeId: myBadgeId})
                     console.log('badgeData title is '+badgeData.badgename)
                 } else {
@@ -54,8 +55,7 @@ export default function FeedbackView() {
             })
         }
 
-    }, [ myBadgeId, studentId ]);
-
+    }, [ myBadgeId, studentId ]); */
 
     return (
         <div>
@@ -69,17 +69,17 @@ export default function FeedbackView() {
             <Typography variant="subtitle1">Assessor: {feedback.assessorName}</Typography>
             
             {isAdmin &&
-            <Button component={Link} to={{pathname:`/feedback/${feedbackId}`, state: {selectedStudentId: studentId, badgeDetails: badgeDetails, selectedStudentName: feedback.studentName} }}>Edit</Button>
+                <Button component={Link} to={`/feedback/${feedbackId}`} state= {{selectedStudentId: studentId, badgeDetails: badgeDetails, selectedStudentName: feedback.studentName, oldFeedback: feedback}}>Edit</Button>
             }
 
             <Grid container sx={{m:2}}>
-                <Grid item>
+                <Grid >
                     <Typography variant="h3">{feedback.badgeName} </Typography>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid xs={12}>
                     <Typography variant="body2" align="justify" sx={{m:4}}>{feedback.createdAt} </Typography>
                 </Grid>
-                <Grid item>
+                <Grid >
                     <Typography variant="h5">Links to Evidence</Typography>
                 <div dangerouslySetInnerHTML={{__html:feedback.artifactLinks}}/>
 
@@ -90,10 +90,10 @@ export default function FeedbackView() {
 
             <Box sx={{flexGrow:1, p:3}} >
 
-                <Grid item xs={12} sm={12}>
+                <Grid xs={12} sm={12}>
   
                 </Grid>
-                <Grid item xs={12} sm={12}>
+                <Grid xs={12} sm={12}>
 
                 </Grid>
 

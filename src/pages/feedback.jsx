@@ -1,6 +1,6 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect } from 'react'
 import { db } from '../firebase';
-import { serverTimestamp, arrayUnion, arrayRemove, getDoc, doc, addDoc, collection, updateDoc } from 'firebase/firestore';
+import { serverTimestamp, arrayUnion, arrayRemove, doc, addDoc, collection, updateDoc } from 'firebase/firestore';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { UserContext } from '../contexts/usercontext';
 import ReactQuill from "react-quill";
@@ -27,17 +27,38 @@ import {
 
 export default function Feedback() {
 
+    /* HOW TO MODIFY THIS COMPONENT
+        Source 1: Access from feedbackView, which is a specific feedback item that Admin decides to edit
+            --We arrive with a "state" object that we access from the "location" object (which is from useLocation() of react-router)
+            --Since we have everything we need, there is no need to go back to firestore,
+                so we use setValue from react-hook-form to populate the form fields
+
+        Source 2: Access from myBadgeDetails (which has a list of feedback items)
+            --We arrive from a particular badge summary for a student
+            --We just want to add a new feedback item (since the student has new evidence)
+            --It might be convenient to access this directly from the student's "myBadges" list also
+            --We are making something new, so we don't need much from the db except what we already have
+                (myBadgeId, studentId)
+
+        WHICH SOURCE?
+            --An obvious difference will be the feedbackId that my as well be sent as
+                a parameter in the link (from feedbackView)
+            --If there is no such parameter, it must be we are coming from Source 2
+                and Admin wants to create a new feedback form
+    */
+
     const { currentUser } = useContext(UserContext)
-    const [ previousFeedbackSummary, setPreviousFeedbackSummary ] = useState({})
-    const [ previousShort, setPreviousShort ] = useState({})
+    //const [ previousFeedbackSummary, setPreviousFeedbackSummary ] = useState({})
+    //const [ previousShort, setPreviousShort ] = useState({})
 
     const { feedbackId } = useParams()
     const location = useLocation()
+    console.log('location is ',location)
     const navigate = useNavigate()
-    const { selectedStudentId='', badgeDetails, selectedStudentName="A Student" } = location.state || ''
+    const { selectedStudentId, badgeDetails, selectedStudentName, oldFeedback={} } = location.state
 
     console.log('selectedStudentId is '+selectedStudentId)
-    //console.log('badgeDetails are '+JSON.stringify(badgeDetails))
+    // console.log('badgeDetails are '+JSON.stringify(badgeDetails))
     const modules = {
         toolbar: {
             container: [
@@ -62,42 +83,41 @@ export default function Feedback() {
 
     const { handleSubmit, control, setValue } = useForm();
 
-    const isAddMode = !feedbackId
+    // If feedbackId exists, admin must want to edit, so use setValue
+    // We probably came from a "feedbackView", so location.state provided all needed data
+    // including the original "feedback" object
 
     useEffect(() => {
-        if(!isAddMode) {
-            getDoc(doc(db,"users",selectedStudentId,"myBadges",badgeDetails.badgeId,"feedback",feedbackId))
-            .then(feedback => {
-                const fields = ['artifactLinks','assessorComments','critsAwarded','critsMax']
-                fields.forEach(field => {
-                    setValue(field, feedback.data()[field]);
-                    console.log("value of a field is "+JSON.stringify(feedback.data()[field]))
-                })
-                const previous = {
-                    critsAwarded: feedback.data().critsAwarded,
-                    critsMax: feedback.data().critsMax,
-                    feedbackId: feedbackId,
-                    createdAt: feedback.data().createdAt,
-                    sumCritsForAssessment: feedback.data().sumCritsForAssessment,
-                    sumCritsMax: feedback.data().sumCritsMax
-                }
-                const previousShort = {
-                    feedbackId: feedbackId,
-                    createdAt: feedback.data().createdAt,
-                    sumCritsForAssessment: feedback.data().sumCritsForAssessment,
-                    sumCritsMax: feedback.data().sumCritsMax,
-                    badgeName: feedback.data().badgeName,
-                    ts_msec: feedback.data().ts_msec
-                }
-                setPreviousFeedbackSummary(previous)
-                setPreviousShort(previousShort)
-                console.log('previous short is '+JSON.stringify(previousShort))
+        console.log('useEffect firing...')
+        if(feedbackId) {
+            const fields = ['artifactLinks','assessorComments','critsAwarded','critsMax']
+            fields.forEach(field => {
+                setValue(field, oldFeedback[field]);
             })
         }
-    },[badgeDetails.badgeId, feedbackId, isAddMode, selectedStudentId, setValue])
+        
+    },[oldFeedback, feedbackId, setValue])
+
+    const previousFeedbackSummary = {
+        critsAwarded: oldFeedback ? oldFeedback.critsAwarded : 0,
+        critsMax: oldFeedback ? oldFeedback.critsMax : 0,
+        feedbackId: feedbackId,
+        createdAt: oldFeedback ? oldFeedback.createdAt : '',
+        sumCritsForAssessment: oldFeedback ? oldFeedback.sumCritsForAssessment : 0,
+        sumCritsMax: oldFeedback ? oldFeedback.sumCritsMax : 0
+    }
+    const previousShort = {
+        feedbackId: feedbackId,
+        createdAt: oldFeedback ? oldFeedback.createdAt : '',
+        sumCritsForAssessment: oldFeedback ? oldFeedback.sumCritsForAssessment : 0,
+        sumCritsMax: oldFeedback ? oldFeedback.sumCritsMax : 0,
+        badgeName: oldFeedback ? oldFeedback.badgeName : '',
+        ts_msec: oldFeedback ? oldFeedback.ts_msec : 0
+    }
+
 
     function onSubmit(data) {
-        return isAddMode
+        return !feedbackId
             ? newFeedback(data)
             : updateFeedback(feedbackId, data);
     }
@@ -143,7 +163,7 @@ export default function Feedback() {
             assessorComments: data.assessorComments,
             createdAt: createdAt,
             timestamp: serverTimestamp(),
-            studentBadgeId: badgeDetails.badgeId,
+            studentBadgeId: badgeDetails.myBadgeId,
             badgeName: badgeDetails.badgename,
             assessorName: currentUser.displayName,
             assessorId: currentUser.uid,
@@ -153,7 +173,7 @@ export default function Feedback() {
             sumCritsMax: sumCritsMax
         }
         
-        addDoc(collection(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId,"feedback"),feedback)
+        addDoc(collection(db,'users',selectedStudentId,'myBadges',badgeDetails.myBadgeId,"feedback"),feedback)
         .then((feedbackDoc)=>{
             const feedbackSummary = {
                 critsAwarded: data.critsAwarded,
@@ -173,7 +193,7 @@ export default function Feedback() {
                 ts_msec: ts_msec 
             }
             console.log("New feedback added to db")
-            updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId)
+            updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.myBadgeId)
             ,{evidence: arrayUnion(feedbackSummary), progress: badgeDetails.progress, criteria: badgeDetails.criteria})
         })
         .then(() => {
@@ -181,7 +201,7 @@ export default function Feedback() {
             ,{evidence: arrayUnion(fbShortSummary)})
         })
         .then(() => {
-            navigate(`/students/${selectedStudentId}/myBadges/${badgeDetails.badgeId}`)
+            navigate(`/students/${selectedStudentId}/myBadges/${badgeDetails.myBadgeId}`)
         })
         .catch((error) => {
             console.error(error);
@@ -224,7 +244,7 @@ export default function Feedback() {
             assessorComments: data.assessorComments,
             createdAt: createdAt,
             timestamp: serverTimestamp(),
-            studentBadgeId: badgeDetails.badgeId,
+            studentBadgeId: badgeDetails.myBadgeId,
             badgeName: badgeDetails.badgename,
             assessorName: currentUser.displayName,
             assessorId: currentUser.uid,
@@ -234,9 +254,9 @@ export default function Feedback() {
             sumCritsMax: sumCritsMax
         }
 
-        updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId,"feedback",feedbackId),feedback)
+        updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.myBadgeId,"feedback",feedbackId),feedback)
         .then(()=>{
-            updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId)
+            updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.myBadgeId)
             ,{evidence: arrayRemove(previousFeedbackSummary)})
             .then(() => {
                 const feedbackSummary = {
@@ -256,7 +276,7 @@ export default function Feedback() {
                     badgeName: badgeDetails.badgename,
                     ts_msec: ts_msec
                 }
-                updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.badgeId)
+                updateDoc(doc(db,'users',selectedStudentId,'myBadges',badgeDetails.myBadgeId)
                 ,{evidence: arrayUnion(feedbackSummary), progress: badgeDetails.progress, criteria: badgeDetails.criteria})
             })
             .then(() => {
@@ -270,7 +290,7 @@ export default function Feedback() {
             .then(() => console.log('badgeDetails.criteria are now '+JSON.stringify(badgeDetails.criteria)))
         })
         .then(() => {
-            navigate(`/students/${selectedStudentId}/myBadges/${badgeDetails.badgeId}`)
+            navigate(`/students/${selectedStudentId}/myBadges/${badgeDetails.myBadgeId}`)
         })
         .catch((error) => {
             console.error(error);
@@ -287,10 +307,10 @@ export default function Feedback() {
             </Typography>
 
             <Grid container sx={{m:2}}>
-                <Grid item>
+                <Grid >
                     <Typography variant="h3">{badgeDetails.badgename} </Typography>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid xs={12}>
                     <Typography variant="body2" align="justify" sx={{m:4}}>{badgeDetails.description} </Typography>
                 </Grid>
             </Grid>
@@ -301,7 +321,7 @@ export default function Feedback() {
                     Submit Feedback Form
                 </Button>
 
-                <Grid item xs={12} sm={12}>
+                <Grid xs={12} sm={12}>
                     <Controller
                         name="artifactLinks"
                         control={control}
@@ -318,7 +338,7 @@ export default function Feedback() {
                         )}
                     />   
                 </Grid>
-                <Grid item xs={12} sm={12}>
+                <Grid xs={12} sm={12}>
                     <Controller
                         name={"assessorComments"}
                         control={control}

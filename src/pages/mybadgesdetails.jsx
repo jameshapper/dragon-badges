@@ -22,9 +22,11 @@ export default function MyBadgeDetails() {
 
     const { isAdmin } = useContext(UserContext)
     const badgeDetails = useLoaderData()
-    const studentName = "Temp Name"
+    const studentName = badgeDetails.studentName
     const studentId = badgeDetails.studentId 
     const myBadgeId = badgeDetails.myBadgeId
+
+    console.log('in myBadgeDetails, studentName is ',studentName)
 
     const critsColor = (critsAward, critsMax) => {
 
@@ -70,7 +72,7 @@ export default function MyBadgeDetails() {
                 {myBadgeId && badgeDetails.criteria && 
                 <>
                 {isAdmin &&
-                <Button component={Link} to={{pathname: '/feedback', state: {selectedStudentId: studentId, badgeDetails: badgeDetails, selectedStudentName: studentName} }} >
+                <Button component={Link} to='/feedback' state={{selectedStudentId: studentId, badgeDetails: badgeDetails, selectedStudentName: studentName} } >
                     Add Feedback
                 </Button>
                 }

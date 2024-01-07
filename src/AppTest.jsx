@@ -75,13 +75,13 @@ const AppRoot = () => {
             <Route path="classes" element={<TeacherClasses />} loader={classesLoader(userContext)}/>
             <Route path="addclass" element={<AddClass />}/>
             <Route path="/account" element={<Account />}/>
-            <Route path="/feedback/:feedbackId" element={<Feedback />} loader={feedbackLoader}/>
+            <Route path="/feedback/:feedbackId" element={<Feedback />}/>
 						<Route path="/students/:studentId" element={<StudentDetails />} loader={studentLoader}/>
             <Route path="/myBadges" element={<MyBadgesRedirect />}/>
             <Route path="/students/:studentId/myBadges" element={<MyBadges />} loader={studentBadgesLoader}/>
 						<Route path="/myBadges/:myBadgeId" element={<MyBadgeDetails />} loader={myBadgeDetailsLoader(userContext)}/>
             <Route path="/students/:studentId/myBadges/:myBadgeId" element={<MyBadgeDetails />} loader={myBadgeDetailsLoader(userContext)}/>
-            <Route path="/students/:studentId/myBadges/:myBadgeId/feedback/:feedbackId" element= {<FeedbackView />}/>
+            <Route path="/students/:studentId/myBadges/:myBadgeId/feedback/:feedbackId" element= {<FeedbackView />} loader={feedbackLoader}/>
             <Route path="/students" element={<Students />} loader={studentListLoader(userContext.currentUser)}/>
             <Route path="/feedback" element={<Feedback />}/>
         </Route>

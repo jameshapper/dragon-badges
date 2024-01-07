@@ -14,6 +14,10 @@ import { Dialog, Typography, Button, ButtonGroup, Table, TableContainer, TableHe
 
 export default function BadgeDetails() {
 
+    // This is a little weird, because the Admin can't edit from this view
+    // Admin has to edit from the badge "card" displayed in the full list
+    // So this need to be improved
+
     const { badgeId } = useParams()
     const { currentUser, isAdmin } = useContext(UserContext)
     const [ refresh, setRefresh ] = useState(false)
@@ -36,6 +40,10 @@ export default function BadgeDetails() {
     }
 
     const handleViewClose = () => setAddBadgeDialog(false);
+
+    // handleAddBadge handles the "Badge Aspiration" request of a student ONLY
+    // It checks to see if the badge is published and also if it has already been added
+    // If everything checks out, it adds the badge aspiration to the student's "myBadges" collection in firestore
 
     const handleAddBadge = (e) => {
         e.preventDefault()
@@ -85,6 +93,10 @@ export default function BadgeDetails() {
     const onFileChange = async (e) => {
         setFileUpload(e.target.files[0])
     };
+
+    // the onSubmit function is just for Admin ONLY to update the badge image
+    // for some reason, I did this here rather than in the original badgeForm
+    // which seems silly, but it seems to work for now?
 
     const onSubmit = async () => {
 

@@ -199,14 +199,6 @@ async function getStudentData(userId) {
 
 // end of notesLoader
 
-// myBadges loader
-export function myBadgesLoader(uid) {
-
-    return () => {
-        return getStudentBadges(uid)
-    }
-}
-
 export function studentBadgesLoader({params}) {
 
     return getStudentBadges(params.studentId)
@@ -249,8 +241,11 @@ export function myBadgeDetailsLoader(userContext) {
 
 async function getMyBadgeDetails(studentId, myBadgeId) {
     console.log('studentId is ',studentId)
+    const studentDoc = await getDoc(doc(db, "users", studentId))
+    const studentName = studentDoc.data().firstName
+    console.log('studentName is ', studentName)
     const studentBadge = await getDoc(doc(db,"users",studentId,"myBadges",myBadgeId))
-    return {...studentBadge.data(), myBadgeId: myBadgeId, studentId: studentId }
+    return {...studentBadge.data(), myBadgeId: myBadgeId, studentId: studentId, studentName: studentName }
 }
 
 // student loaders
@@ -281,5 +276,14 @@ async function getStudents(currentUser) {
 
 // feedback loader
 export function feedbackLoader({ params }) {
-    return getBadge(params.badgeId)
+    return getFeedback(params.myBadgeId, params.studentId, params.feedbackId)
+}
+
+async function getFeedback(myBadgeId, studentId, feedbackId) {
+    const feedbackDoc = await getDoc(doc(db,"users",studentId,"myBadges",myBadgeId,"feedback",feedbackId))
+    const feedback = feedbackDoc.data()
+    console.log('feedback in loaders ', feedback)
+    const myBadgeDoc = await getDoc(doc(db,"users",studentId,"myBadges",myBadgeId))
+    const badgeDetails = { ...myBadgeDoc.data(), badgeId: myBadgeId }
+    return { feedback, badgeDetails, feedbackId, studentId }
 }
