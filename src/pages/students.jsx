@@ -73,15 +73,15 @@ function Students() {
         event.preventDefault()
         if(selectedClass){
           console.log('planning to submit to class id '+selectedClass.id)
-          console.log('and submit selected student ids are '+selectedStudents)
-          updateDoc(doc(db,'users',currentUser.uid,'teacherClasses',selectedClass.id,{
+          console.log('and submit selected student ids are '+selectedStudents.map(student => console.log(student.uid)))
+          updateDoc(doc(db,'users',currentUser.uid,'teacherClasses',selectedClass.id),{
               students: arrayUnion(...selectedStudents)
-          }))
+          })
           .then(() => {
             selectedStudents.map(student => (
-              updateDoc(doc(db,'users',student.uid,{
+              updateDoc(doc(db,'users',student.uid),{
                 classes: arrayUnion({value: selectedClass.id, label: selectedClass.name})
-              }))
+              })
             ))
           })
           .then(() => {
@@ -377,6 +377,7 @@ export function EnhancedTable(props) {
     if (event.target.checked) {
       //const newSelecteds = rows.map((n) => n.uid);
       const newSelecteds = rows
+      console.log('select all newSelecteds are ', newSelecteds)
       setSelected(newSelecteds);
       props.setSelectedStudents(newSelecteds)
       return;
@@ -404,6 +405,7 @@ export function EnhancedTable(props) {
         selected.slice(selectedIndex + 1),
       );
     }
+    console.log('current newSelected are ', newSelected)
 
     setSelected(newSelected);
     props.setSelectedStudents(newSelected)

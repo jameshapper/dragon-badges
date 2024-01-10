@@ -61,36 +61,12 @@ function TeacherClasses() {
     const [ status, setStatus ] = useState("Active")
     const [ noteType, setNoteType ] = useState("ActionItem")
     const [ actionType, setActionType ] = useState("ProblemSolving")
-/*     const [ selectedDate, setSelectedDate ] = useState(new Date(Date.now() - 604800000))
-    const [ laterDate ] = useState(new Date(Date.now() + 691200000)) */
+//  const [ selectedDate, setSelectedDate ] = useState(new Date(Date.now() - 604800000))
     const [ selectedDate, setSelectedDate ] = useState(dayjs())
-    const [ laterDate ] = useState(dayjs())
-    //const [ laterDate, setLaterDate ] = useState(new Date(Date.now() + 691200000))
 
     const [ selected, setSelected ] = useState([])
     const teacherClasses = useLoaderData()
-    console.log(teacherClasses)
-
-
-    //get class data (if stored in teacherClasses collection?)
-/*     useEffect(() => {
-        
-        if(user){
-            return db.collection("users").doc(user.uid).collection('teacherClasses').get()
-            .then((snapshot) => {
-                const teacherData = []
-                snapshot.forEach((doc) => {
-                    teacherData.push({...doc.data(), id: doc.id})
-                })
-                setTeacherClasses(teacherData)
-                setUiLoading(false)
-            })
-            .catch((error) => {
-                console.log("No classes error: ", error);
-            })
-        }
-
-    }, [user]); */
+    console.log('selectedDate start as ',selectedDate)
 
     useEffect(() => {
         //console.log('selected ids are '+selected.map((student) => student.value))
@@ -117,7 +93,7 @@ function TeacherClasses() {
         let notes20 = []
         let notes30 = []
 
-        let recentDate = selectedDate
+        let recentDate = selectedDate.toDate()
         let classObject = {}
         let targetAssessment = {}
         let termGoal = {}
@@ -125,8 +101,6 @@ function TeacherClasses() {
 
         console.log('selectedDate is ')
         console.log(selectedDate)
-        console.log('later date is ')
-        console.log(laterDate)
 
         function evidenceSum(evidenceArray, startDate) {
             const termEvidence = evidenceArray.filter(evidence => {
@@ -140,6 +114,7 @@ function TeacherClasses() {
         }
 
         console.log('students in array groups lengths '+students10.length+students20.length+students30.length)
+        console.log('students10 is ',students10)
 
         if(noteType === "Progress") {
             if(students10.length > 0) {
@@ -223,16 +198,20 @@ function TeacherClasses() {
         } else {
 
              if(students10.length>0){
+                console.log('start query')
+                console.log('noteType is ', noteType)
+                console.log('recentDate is ', recentDate)
+
                 const first10query = query(collectionGroup(db,'notes')
                 ,where('uid','in', students10)
                 ,where('noteType','==',noteType)
                 ,where("timestamp", ">=", recentDate)
-                ,where("timestamp", "<", laterDate)
                 ,orderBy("timestamp","desc"))
                 let first10 = await getDocs(first10query)
                 first10.forEach((doc) => {
                     notes10.push({ ...doc.data(), id: doc.id })
                 })
+                console.log('notes10 ',notes10)
             }
 
             if(students20.length>0){

@@ -29,7 +29,6 @@ import Grid from '@mui/material/Unstable_Grid2';
 import { useLoaderData } from 'react-router-dom';
 
 function Note() {
-    console.log('made it to Note')
 
     const [ noteForEdit, setNoteForEdit ] = useState({})
 

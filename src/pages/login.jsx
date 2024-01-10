@@ -41,8 +41,7 @@ function Login() {
         .then((user) => {
 		//after we have the credential - lets check if the user exists in firestore
 		console.log('user object ', user)
-		console.log('user.user object ', user.user)
-		console.log('user.user.uid ', user.user.uid)
+
         const {isNewUser} = getAdditionalUserInfo(user)
         console.log('isNewUser is ', isNewUser)
 		const docRef = doc(db,'users',user.user.uid)

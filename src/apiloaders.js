@@ -1,6 +1,11 @@
-//import { redirect } from 'react-router-dom';
+import { redirect } from 'react-router-dom';
 import { db } from './firebase';
 import { doc, getDoc, collectionGroup, where, getDocs, query, collection } from 'firebase/firestore'
+import dayjs from 'dayjs';
+//import relativeTime from "dayjs/plugin/relativeTime";
+import { Timestamp } from 'firebase/firestore'
+
+
 
 // badgesLoader for Badges component at badges route
 export function badgesLoader({params}) {
@@ -11,7 +16,7 @@ export function badgesLoader({params}) {
 async function getBadgesAndClasses() {
     const badges = await getBadges()
     const classesList = await getClasses()
-    console.log(classesList)
+    //console.log(classesList)
     return { badges, classesList }
 }
 
@@ -30,19 +35,31 @@ async function getClasses() {
 }
 
 async function getTeacherClasses(userId) {
-    const querySnapshot = await getDocs(collection(db, "users", userId, "teacherClasses"));
     const teacherData = []
-    querySnapshot.forEach((doc) => {
+    try {
+        const querySnapshot = await getDocs(collection(db, "users", userId, "teacherClasses"));
+        //const teacherData = []
+        querySnapshot.forEach((doc) => {
         teacherData.push({...doc.data(), id: doc.id})
-        console.log(doc.id, " => ", doc.data());
-    })
-  // doc.data() is never undefined for query doc snapshots
+        //console.log(doc.id, " => ", doc.data());
+        //return(teacherData)
+    })    
+    } catch (err) {
+        console.log('probably a permissions error? ', err)
+        return redirect('/dashboard')
+    }
+
     return(teacherData)
+    //const querySnapshot = await getDocs(collection(db, "users", userId, "teacherClasses"));
+
+  // doc.data() is never undefined for query doc snapshots
+  
 }
 
 export function classesLoader(userContext) {
     return () => {
         const { currentUser } = userContext
+
         return getTeacherClasses(currentUser.uid)
     }
 }
@@ -64,7 +81,9 @@ async function getBadge(badgeId) {
 
 // notesLoader for getting notes to dashboard
 
-const recentDate = new Date('2023-04-29')
+//const recentDate = new Date('2023-04-29')
+const aMonthAgo = dayjs().subtract(30,'day')
+const recentDate = Timestamp.fromDate(aMonthAgo.toDate())
 
 export function notesLoader(userContext) {
     const { currentUser } = userContext
@@ -103,6 +122,7 @@ async function getActionItems(userId) {
         querySnapshot.forEach((actionItemsdoc) => {
             actionItems.push({ ...actionItemsdoc.data(), id: actionItemsdoc.id })
         });
+        console.log(actionItems)
     }
 
     return actionItems
@@ -179,16 +199,18 @@ async function getStudentData(userId) {
     if(userDoc) {
         console.log('userDoc exists')
         const userData = userDoc.data()
-        console.log('userData is ',userData)
+        //console.log('userData is ',userData)
         const hasClasses = "classes" in userData
-        //const summaryEvidence = userData.evidence
-        const summaryEvidence = []
+        let summaryEvidence = []
+        if(Object.prototype.hasOwnProperty.call(userData,'evidence')){
+            summaryEvidence = userDoc.data().evidence
+        }
         const classes = hasClasses ? userData.classes : []
         const badges = []
         const badgeMap = userData.myBadgesMap
         if(badgeMap){
             const entries = Object.entries(badgeMap)
-            console.log('entries are '+JSON.stringify(entries))
+            //console.log('entries are '+JSON.stringify(entries))
             entries.map(entry => {
                 return badges.push(entry[1].badgename)
             })
@@ -205,17 +227,17 @@ export function studentBadgesLoader({params}) {
 }
 
 async function getStudentBadges(studentId) {
-    console.log('studentId from getStudentBadges ',studentId)
+    //console.log('studentId from getStudentBadges ',studentId)
     const studentRef = doc(db, "users", studentId)
     const studentDoc = await getDoc(studentRef)
     const studentName = studentDoc.data().firstName
-    console.log('studentName ',studentName)
+    //console.log('studentName ',studentName)
     const badgeData = await getDocs(query(collection(db,'users',studentId,'myBadges'),where("uid","==",studentId)))
-    console.log('did we get badges?')
+    //console.log('did we get badges?')
     const badgeList = []
     badgeData.forEach((badgeDoc) => {
         badgeList.push({...badgeDoc.data(), id: badgeDoc.id})
-        console.log(badgeDoc.id, " => ", badgeDoc.data());
+        //console.log(badgeDoc.id, " => ", badgeDoc.data());
     })
     return { studentName, badgeList }
 }
@@ -240,7 +262,7 @@ export function myBadgeDetailsLoader(userContext) {
 }
 
 async function getMyBadgeDetails(studentId, myBadgeId) {
-    console.log('studentId is ',studentId)
+    //console.log('studentId is ',studentId)
     const studentDoc = await getDoc(doc(db, "users", studentId))
     const studentName = studentDoc.data().firstName
     console.log('studentName is ', studentName)
@@ -268,7 +290,7 @@ async function getStudents(currentUser) {
         teacherClassDocs.forEach((teacherClassDoc) => {
             classData.push({...teacherClassDoc.data(), id: teacherClassDoc.id})
         })
-        console.log("class data is "+classData)
+        //console.log("class data is "+classData)
         return { studentsArray, classData }
     } else { return null}
 
@@ -282,7 +304,7 @@ export function feedbackLoader({ params }) {
 async function getFeedback(myBadgeId, studentId, feedbackId) {
     const feedbackDoc = await getDoc(doc(db,"users",studentId,"myBadges",myBadgeId,"feedback",feedbackId))
     const feedback = feedbackDoc.data()
-    console.log('feedback in loaders ', feedback)
+    //console.log('feedback in loaders ', feedback)
     const myBadgeDoc = await getDoc(doc(db,"users",studentId,"myBadges",myBadgeId))
     const badgeDetails = { ...myBadgeDoc.data(), badgeId: myBadgeId }
     return { feedback, badgeDetails, feedbackId, studentId }

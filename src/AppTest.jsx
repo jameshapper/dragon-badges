@@ -1,10 +1,14 @@
+// initial inspiration https://www.freecodecamp.org/news/how-to-build-a-todo-application-using-reactjs-and-firebase/
+
 import React from "react"
 import {UserContext} from './contexts/usercontext'
 import {
     createBrowserRouter,
     createRoutesFromElements,
     RouterProvider,
-    Route
+    Route, 
+    Navigate,
+    Outlet
   } from "react-router-dom"
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -56,6 +60,15 @@ const theme = createTheme({
 
 //<Route path="dashboard" element={<Note />} loader={notesLoader(userContext)} />
 
+// eslint-disable-next-line react/prop-types
+const AdminRoute = ({redirectPath = '/dashboard', children }) => {
+  const { isAdmin } = React.useContext(UserContext);
+
+  if (!isAdmin) {
+    return <Navigate to={redirectPath} replace />;
+  }
+  return children ? children : <Outlet />;
+};
 
 const AppRoot = () => {
     const userContext = React.useContext(UserContext);
@@ -64,8 +77,7 @@ const AppRoot = () => {
     createRoutesFromElements(
         <Route path="/" >
         <Route path="login" element={<Login />} />
-        <Route index element={<div>Hello world!</div>} />
-        <Route path="temp" element={<div>Hello temp!</div>} />
+        <Route index element={<Login/>} />
         <Route element={<RootLayout/>}>
             <Route path="badges" element={<Badges />} loader={badgesLoader} />
             <Route path="badges/:badgeId" element={<BadgeDetails />} loader={badgeEditLoader}/>    
@@ -73,7 +85,7 @@ const AppRoot = () => {
             <Route path="badgeForm/:badgeId" element={<BadgeForm />} loader={badgeEditLoader}/>
             <Route path="dashboard" element={<Note />} loader={notesLoader(userContext)} />
             <Route path="classes" element={<TeacherClasses />} loader={classesLoader(userContext)}/>
-            <Route path="addclass" element={<AddClass />}/>
+            <Route path="addclass" element={<AdminRoute><AddClass /></AdminRoute>}/>
             <Route path="/account" element={<Account />}/>
             <Route path="/feedback/:feedbackId" element={<Feedback />}/>
 						<Route path="/students/:studentId" element={<StudentDetails />} loader={studentLoader}/>

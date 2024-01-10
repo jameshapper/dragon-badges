@@ -120,7 +120,7 @@ export default function ViewNotes({note, handleViewClose, viewOpen }) {
         const newComment = {
             body: commentBody,
             createdAt: new Date().toISOString(),
-            timestamp: serverTimestamp(), // do we need await here?
+            timestamp: serverTimestamp(),
             uid: currentUser.uid,
             author: currentUser.displayName,
             avatar: avatar,

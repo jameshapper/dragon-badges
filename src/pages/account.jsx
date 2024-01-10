@@ -1,5 +1,8 @@
 import { useState, useContext, useEffect } from 'react';
 import { db, storage } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { doc, updateDoc } from 'firebase/firestore'
+import { updateProfile } from 'firebase/auth'
 import { useNavigate } from 'react-router';
 
 import Avatar from '@mui/material/Avatar';
@@ -37,6 +40,7 @@ function Account() {
 		// create the preview
 		const objectUrl = URL.createObjectURL(fileUpload)
 		setPreview(objectUrl)
+		Filevalidation(fileUpload)
 	
 		// free memory when ever this component is unmounted
 		return () => URL.revokeObjectURL(objectUrl)
@@ -46,11 +50,11 @@ function Account() {
         // Check if any file is selected.
         if (file) {  
 			const fsize = file.size;
-			const fileKb = Math.round((fsize / 1024));
+			const fileKb = Math.round((fsize / 128));
 			// The size of the file.
-			if (fileKb >= 1024) {
+			if (fileKb >= 128) {
 				alert(
-					"File too Big, please reduce file size to less than 1mb");
+					"File too Big, please reduce file size to less than 100 kb");
 			} else {return true}
 		} else {return false}
     }
@@ -58,23 +62,24 @@ function Account() {
     const onSubmit = async () => {
 
         console.log('file upload name is '+fileUpload.name)
+		// Reddit suggestion: Why not upload the user images in a path formed with the user uid? This way you can enforce rules based on user auth.
         
         if (Filevalidation(fileUpload)) {
-            const storageRef = storage.ref();
-            const fileRef = storageRef.child(fileUpload.name);
-            await fileRef.put(fileUpload);
-            let downloadUrl = await fileRef.getDownloadURL()
-            console.log('waiting for download url '+await downloadUrl)
-            db.collection("users").doc(currentUser.uid).update({
-                avatar: await downloadUrl
+            const fileRef = ref(storage, fileUpload.name);
+            //const fileRef = storageRef.child(fileUpload.name);
+            await uploadBytes(fileRef,fileUpload);
+            let downloadUrl = await getDownloadURL(fileRef)
+            console.log('waiting for download url '+ downloadUrl)
+            updateDoc(doc(db,"users",currentUser.uid),{
+                avatar: downloadUrl
             });
-            await currentUser.updateProfile({
-                photoURL: await downloadUrl
+            await updateProfile(currentUser, {
+                photoURL: downloadUrl
             })
-            .then(function() {
-            console.log("update appears successful")
-            navigate('/')
-            }).catch(function(error) {
+            .then(() => {
+				console.log("update appears successful")
+				navigate('/')
+            }).catch((error) => {
                 console.log('problem updating image ')
                 console.log(error)
             });
@@ -100,7 +105,7 @@ function Account() {
             <Box sx={{flexGrow:1,p:3}}>
                 <Toolbar />
 				<Grid container direction='column' align='center' spacing={2}>
-					<Grid item xs={12}>
+					<Grid xs={12}>
 						<Avatar alt="User Avatar" src={avatar} sx={{
 							height: 330,
 							width: 300,
@@ -114,7 +119,7 @@ function Account() {
 						</p>
 					</Grid>
 					{preview && 
-					<Grid item xs={12}>
+					<Grid xs={12}>
 						<Avatar alt="User Avatar" src={preview} sx={{
 								height: 330,
 								width: 300,
@@ -127,7 +132,7 @@ function Account() {
 					}
 
 
-					<Grid item xs={12}>
+					<Grid xs={12}>
 
 						<ButtonGroup orientation='vertical'>
 							<Button variant='contained' component='label' sx={{m:1}}>
