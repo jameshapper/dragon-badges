@@ -60,6 +60,7 @@ const theme = createTheme({
 
 //<Route path="dashboard" element={<Note />} loader={notesLoader(userContext)} />
 
+// https://www.robinwieruch.de/react-router-private-routes/
 // eslint-disable-next-line react/prop-types
 const AdminRoute = ({redirectPath = '/dashboard', children }) => {
   const { isAdmin } = React.useContext(UserContext);

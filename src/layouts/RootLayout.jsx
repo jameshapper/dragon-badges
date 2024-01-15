@@ -21,7 +21,8 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import { EmojiPeople } from '@mui/icons-material';
 import { ListItemButton } from '@mui/material';
 
-
+// TRY NAVLINK FOR "ACTIVE" ICONS https://blog.webdevsimplified.com/2022-07/react-router/
+// OR https://mui.com/material-ui/guides/routing/
 const drawerWidth = 200;
 
  const menuItemsUser = [

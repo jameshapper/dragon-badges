@@ -89,9 +89,11 @@ export default function BadgeDetails() {
     }
 
     const [ fileUpload, setFileUpload ] = useState(null)
+    const [ imagePreview, setImagePreview ] = useState(badgeDetails.imageUrl)
   
     const onFileChange = async (e) => {
         setFileUpload(e.target.files[0])
+        setImagePreview(URL.createObjectURL(e.target.files[0]))
     };
 
     // the onSubmit function is just for Admin ONLY to update the badge image
@@ -203,7 +205,7 @@ export default function BadgeDetails() {
                     <Card sx={{ maxWidth: 280 }}>
                         <CardMedia
                             sx={{ p:1 }}
-                            image={badgeDetails.imageUrl}
+                            image={imagePreview}
                             title="Badge Image"
                             component="img"
                         />

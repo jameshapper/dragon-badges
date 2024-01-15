@@ -22,7 +22,7 @@ function Login() {
 	useEffect(() => {
 		if (!value.loading) {
 			if (value.currentUser) {
-				setredirect('/')
+				setredirect('/classes')
 			}
 		}
 	}, [value.loading, value.currentUser])
@@ -61,7 +61,7 @@ function Login() {
 		})
     })
     .then(() => {
-		navigate('/')});
+		navigate('/classes')});
 	}
 	
     return (
